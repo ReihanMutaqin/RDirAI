@@ -69,23 +69,41 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     return false;
   };
 
+  const normalizeFilename = (rawName: string | undefined, lang: string): string => {
+    const cleanLang = (lang || 'html').toLowerCase();
+
+    // Fix generic/numbered filenames (file_1.html, index_2.html) -> standard web file names
+    if (!rawName || rawName.match(/^(file|index|code|snippet)[\-_]?\d*/i)) {
+      if (cleanLang === 'css') return 'style.css';
+      if (['js', 'javascript', 'jsx', 'ts', 'tsx'].includes(cleanLang)) return 'script.js';
+      if (cleanLang === 'php') return 'index.php';
+      if (cleanLang === 'svg') return 'vector.svg';
+      return 'index.html';
+    }
+
+    return rawName.trim();
+  };
+
   // Extract generated code files from content to display Kimi-style File Cards
   const getCreatedFiles = (content: string) => {
     if (isUser || !content) return [];
-    const files: { filename: string; language: string; code: string }[] = [];
+    const filesMap = new Map<string, { filename: string; language: string; code: string }>();
     const codeBlockRegex = /```(html|xml|svg|javascript|jsx|js|css|php|python|json|sql)?\s*([a-zA-Z0-9_\-\.]+\.[a-zA-Z0-9]+)?\n([\s\S]*?)```/gi;
     let match;
-    let count = 1;
     while ((match = codeBlockRegex.exec(content)) !== null) {
       const lang = match[1]?.toLowerCase() || 'html';
-      const filename = match[2] || `index_${count}.${lang === 'javascript' ? 'js' : lang}`;
+      const filename = normalizeFilename(match[2], lang);
       const code = match[3].trim();
       if (code.length >= 10) {
-        files.push({ filename, language: lang, code });
-        count++;
+        const existing = filesMap.get(filename);
+        if (existing) {
+          filesMap.set(filename, { ...existing, code: existing.code + '\n' + code });
+        } else {
+          filesMap.set(filename, { filename, language: lang, code });
+        }
       }
     }
-    return files;
+    return Array.from(filesMap.values());
   };
 
   const createdFiles = getCreatedFiles(message.content);

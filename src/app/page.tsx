@@ -119,6 +119,20 @@ export default function Home() {
     }
   };
 
+  const normalizeFilename = (rawName: string | undefined, lang: string): string => {
+    const cleanLang = (lang || 'html').toLowerCase();
+
+    if (!rawName || rawName.match(/^(file|index|code|snippet)[\-_]?\d*/i)) {
+      if (cleanLang === 'css') return 'style.css';
+      if (['js', 'javascript', 'jsx', 'ts', 'tsx'].includes(cleanLang)) return 'script.js';
+      if (cleanLang === 'php') return 'index.php';
+      if (cleanLang === 'svg') return 'vector.svg';
+      return 'index.html';
+    }
+
+    return rawName.trim();
+  };
+
   // Clean file extraction with deduplication (index.html, style.css, script.js)
   const extractAllFilesFromMessages = (msgList: Message[]) => {
     const fileMap: Map<string, GeneratedFile> = new Map();
@@ -129,14 +143,7 @@ export default function Home() {
         let match;
         while ((match = codeBlockRegex.exec(msg.content)) !== null) {
           const lang = match[1]?.toLowerCase() || 'html';
-          
-          let defaultFilename = `index.${lang === 'javascript' || lang === 'jsx' ? 'js' : lang}`;
-          if (lang === 'css') defaultFilename = 'style.css';
-          if (lang === 'js' || lang === 'javascript') defaultFilename = 'script.js';
-          if (lang === 'php') defaultFilename = 'index.php';
-          if (lang === 'svg') defaultFilename = 'vector.svg';
-
-          const filename = match[2] || defaultFilename;
+          const filename = normalizeFilename(match[2], lang);
           const code = match[3].trim();
 
           if (code) {
@@ -167,7 +174,7 @@ export default function Home() {
     const match = content.match(codeBlockRegex);
     if (match) {
       const lang = match[1].toLowerCase();
-      const filename = match[2] || `index.${lang === 'javascript' ? 'js' : lang}`;
+      const filename = normalizeFilename(match[2], lang);
       const code = match[3].trim();
 
       if (code.length >= 25) {

@@ -20,7 +20,14 @@ const SYSTEM_PROMPT = `
 Anda adalah RdirAI, asisten AI canggih ahli pemrograman web (HTML, CSS, JavaScript, PHP, SVG, React, Python).
 Saat pengguna meminta untuk membuat website, aplikasi web, atau modul kode:
 1. Bagi proses pembuatan menjadi beberapa Tahap (Phase Execution) yang terstruktur.
-2. Selalu sertakan nama file di atas blok kode, misalnya:
+2. SELALU gunakan nama file standar web yang mudah dibaca dan intuitif:
+   - Gunakan \`index.html\` untuk struktur HTML utama.
+   - Gunakan \`style.css\` untuk styling CSS.
+   - Gunakan \`script.js\` untuk logika JavaScript.
+   - Gunakan \`index.php\` untuk backend PHP.
+   - DILARANG menggunakan nama file generik seperti file_1.html, file_2.html, file_1.css!
+
+Sertakan nama file di atas blok kode persis seperti contoh berikut:
 \`\`\`html index.html
 <!-- Kode HTML -->
 \`\`\`
@@ -57,7 +64,6 @@ export async function POST(request: Request) {
 
     const lastUserMessage = messages[messages.length - 1];
 
-    // Ensure conversation exists in TiDB (bound to userId)
     let currentConvId = conversationId;
     if (!currentConvId) {
       currentConvId = `conv_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -72,7 +78,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // Save user message to TiDB
     if (lastUserMessage && lastUserMessage.role === 'user') {
       const userMsgId = `msg_u_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
       try {
@@ -85,7 +90,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // Prep messages with System Prompt
     const fullMessages = [
       { role: 'system', content: SYSTEM_PROMPT },
       ...messages.map((m: any) => ({
@@ -94,7 +98,6 @@ export async function POST(request: Request) {
       })),
     ];
 
-    // Call OpenRouter API
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -119,7 +122,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Setup ReadableStream for Server-Sent Events to Client
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
     let accumulatedContent = '';
@@ -166,7 +168,6 @@ export async function POST(request: Request) {
         } finally {
           controller.close();
 
-          // Save assistant message to TiDB upon stream completion
           if (accumulatedContent && currentConvId) {
             const assistantMsgId = `msg_a_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
             try {
