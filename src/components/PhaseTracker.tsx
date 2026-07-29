@@ -15,17 +15,17 @@ export const PhaseTracker: React.FC<PhaseTrackerProps> = ({ phases }) => {
   const progressPercent = Math.round((completedCount / phases.length) * 100);
 
   return (
-    <div className="my-4 p-4 rounded-2xl bg-slate-900/90 border border-purple-500/30 shadow-xl backdrop-blur">
+    <div className="my-4 p-4 rounded-2xl bg-[#121520] border border-[#222738] shadow-lg backdrop-blur">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-purple-500/20 text-purple-300">
+          <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">
             <Layers className="w-4 h-4" />
           </div>
-          <span className="text-xs font-bold text-gray-100 tracking-wide">
+          <span className="text-xs font-bold text-gray-200 tracking-wide">
             Tahap Pembuatan (Phase Execution)
           </span>
         </div>
-        <span className="text-xs font-mono font-semibold text-purple-400">
+        <span className="text-xs font-mono font-semibold text-blue-400">
           {progressPercent}% Selesai
         </span>
       </div>
@@ -33,7 +33,7 @@ export const PhaseTracker: React.FC<PhaseTrackerProps> = ({ phases }) => {
       {/* Progress Bar */}
       <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-4">
         <div
-          className="h-full bg-gradient-to-r from-purple-500 via-indigo-500 to-emerald-400 transition-all duration-500 ease-out"
+          className="h-full bg-gradient-to-r from-blue-600 via-indigo-500 to-emerald-400 transition-all duration-500 ease-out"
           style={{ width: `${progressPercent}%` }}
         />
       </div>
@@ -48,7 +48,7 @@ export const PhaseTracker: React.FC<PhaseTrackerProps> = ({ phases }) => {
                 phase.status === 'completed'
                   ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300'
                   : phase.status === 'in_progress'
-                  ? 'bg-purple-950/40 border-purple-500/50 text-purple-200 shadow-md animate-pulse'
+                  ? 'bg-blue-950/40 border-blue-500/40 text-blue-200 shadow-md animate-pulse'
                   : 'bg-slate-950/40 border-slate-800 text-gray-500'
               }`}
             >
@@ -57,7 +57,7 @@ export const PhaseTracker: React.FC<PhaseTrackerProps> = ({ phases }) => {
                   {phase.status === 'completed' ? (
                     <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                   ) : phase.status === 'in_progress' ? (
-                    <Loader2 className="w-4 h-4 text-purple-400 animate-spin" />
+                    <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
                   ) : (
                     <Circle className="w-4 h-4 text-gray-600" />
                   )}
@@ -77,7 +77,7 @@ export const PhaseTracker: React.FC<PhaseTrackerProps> = ({ phases }) => {
                   phase.status === 'completed'
                     ? 'bg-emerald-500/20 text-emerald-400'
                     : phase.status === 'in_progress'
-                    ? 'bg-purple-500/20 text-purple-300'
+                    ? 'bg-blue-500/20 text-blue-300'
                     : 'bg-gray-800 text-gray-500'
                 }`}
               >

@@ -4,11 +4,11 @@
 
 @layer base {
   body {
-    @apply bg-[#0c0d10] text-gray-100 antialiased overflow-hidden font-sans;
+    @apply bg-[#0b0c10] text-gray-100 antialiased overflow-hidden font-sans;
   }
 }
 
-/* Custom Scrollbar for Luxury Dark Theme */
+/* Custom Scrollbar for Professional Neutral Dark Theme */
 .custom-scrollbar::-webkit-scrollbar {
   width: 5px;
   height: 5px;
@@ -19,44 +19,44 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #252834;
+  background: #232736;
   border-radius: 9999px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #3b3f52;
+  background: #32384c;
 }
 
-/* Background Grid Pattern */
+/* Subtle Grid Pattern */
 .bg-grid-pattern {
   background-size: 32px 32px;
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
 }
 
-/* Radial Gradient Glows */
+/* Radial Glow */
 .bg-glow-radial {
-  background: radial-gradient(circle at 50% 30%, rgba(124, 92, 255, 0.15), transparent 70%);
+  background: radial-gradient(circle at 50% 30%, rgba(37, 99, 235, 0.08), transparent 70%);
 }
 
-/* Glassmorphism & Glowing Borders */
+/* Glassmorphism & Simple Borders */
 .glass-panel {
-  background: rgba(18, 20, 26, 0.75);
+  background: rgba(18, 20, 28, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .glass-card {
-  background: rgba(26, 29, 38, 0.6);
+  background: rgba(22, 25, 34, 0.7);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .glass-card:hover {
-  border-color: rgba(168, 85, 247, 0.4);
-  box-shadow: 0 0 25px rgba(168, 85, 247, 0.15);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
 }
 
 /* Code Highlighting overrides */
@@ -92,11 +92,11 @@ pre code.hljs {
 }
 
 .prose th, .prose td {
-  border: 1px solid #282c3c;
+  border: 1px solid #232736;
   padding: 0.5rem 0.75rem;
   text-align: left;
 }
 
 .prose th {
-  background-color: #161922;
+  background-color: #141722;
 }

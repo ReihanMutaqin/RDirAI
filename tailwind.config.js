@@ -10,12 +10,12 @@ module.exports = {
     extend: {
       colors: {
         kimi: {
-          bg: '#0c0d10',
-          sidebar: '#12141a',
-          card: '#181b24',
-          border: '#222634',
-          accent: '#8b5cf6',
-          hover: '#1e2230',
+          bg: '#0b0c10',
+          sidebar: '#12141c',
+          card: '#161922',
+          border: '#202432',
+          accent: '#2563eb',
+          hover: '#1b1f2c',
         },
       },
       fontFamily: {

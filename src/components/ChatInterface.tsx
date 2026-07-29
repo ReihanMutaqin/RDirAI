@@ -99,14 +99,24 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     const reader = new FileReader();
 
-    if (
-      file.type.startsWith('text/') ||
-      file.type.includes('json') ||
-      file.type.includes('xml') ||
-      file.name.match(/\.(js|jsx|ts|tsx|html|css|php|py|json|md|txt|sql|csv|svg)$/i)
-    ) {
+    if (file.type.startsWith('image/')) {
+      // Images read as base64 Data URL
       reader.onload = (e) => {
-        const textContent = e.target?.result as string;
+        const base64Content = e.target?.result as string;
+        const newFile: AttachedFile = {
+          id: `file_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          name: file.name,
+          size: file.size,
+          type: file.type || 'image/png',
+          content: base64Content,
+        };
+        setAttachments((prev) => [...prev, newFile]);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // All code/text/config files (.env, .gitignore, .json, .txt, etc.) read as Plain Text
+      reader.onload = (e) => {
+        const textContent = (e.target?.result as string) || '';
         const newFile: AttachedFile = {
           id: `file_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
           name: file.name,
@@ -117,20 +127,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         setAttachments((prev) => [...prev, newFile]);
       };
       reader.readAsText(file);
-    } else {
-      // Base64 for images / binary documents
-      reader.onload = (e) => {
-        const base64Content = e.target?.result as string;
-        const newFile: AttachedFile = {
-          id: `file_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-          name: file.name,
-          size: file.size,
-          type: file.type || 'application/octet-stream',
-          content: base64Content,
-        };
-        setAttachments((prev) => [...prev, newFile]);
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -151,7 +147,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#0c0d10] relative overflow-hidden bg-grid-pattern">
+    <div className="flex-1 flex flex-col h-full bg-[#0b0c10] relative overflow-hidden bg-grid-pattern">
       {/* Hidden File Input (Max 50MB) */}
       <input
         ref={fileInputRef}
@@ -165,20 +161,19 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       <div className="absolute inset-0 bg-glow-radial pointer-events-none" />
 
       {/* Top Header Bar */}
-      <header className="h-14 border-b border-[#1e2230] px-4 flex items-center justify-between bg-[#101218]/80 backdrop-blur shrink-0 z-10">
+      <header className="h-14 border-b border-[#1e2332] px-4 flex items-center justify-between bg-[#121520]/80 backdrop-blur shrink-0 z-10">
         <div className="flex items-center gap-3">
           <button
             onClick={onOpenSidebar}
-            className="md:hidden text-gray-400 hover:text-white p-1.5 rounded-lg hover:bg-[#1a1e2b]"
+            className="md:hidden text-gray-400 hover:text-white p-1.5 rounded-lg hover:bg-[#1a1f30]"
           >
             <Menu className="w-5 h-5" />
           </button>
-          {/* Clean Header Bar */}
         </div>
 
         {activeArtifact && (
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/60 border border-purple-500/30 text-purple-300 text-xs font-mono">
-            <Layout className="w-3.5 h-3.5 text-purple-400" />
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-blue-950/60 border border-blue-500/30 text-blue-300 text-xs font-mono">
+            <Layout className="w-3.5 h-3.5 text-blue-400" />
             <span className="truncate max-w-[180px]">{activeArtifact.title}</span>
           </div>
         )}
@@ -192,9 +187,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         {messages.length === 0 ? (
           /* High-End Studio Hero Screen */
           <div className="h-full max-w-4xl mx-auto px-4 flex flex-col items-center justify-center text-center py-12">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#181b26] border border-purple-500/30 text-xs text-purple-300 font-medium mb-6 shadow-lg shadow-purple-900/20">
-              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-              <span>Rdir Studio Engine • Enterprise Web & Code Builder</span>
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#161a26] border border-blue-500/30 text-xs text-blue-300 font-medium mb-6 shadow-lg shadow-blue-950/20">
+              <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+              <span>Rdir Studio Engine • Development Workspace</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight mb-4 leading-tight">
@@ -202,7 +197,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </h1>
             <p className="text-sm sm:text-base text-gray-400 max-w-2xl mb-10 leading-relaxed">
               Arsitektur pengembang otomatis untuk menghasilkan aplikasi web multi-file (HTML, CSS, JS, PHP, SVG) lengkap dengan{' '}
-              <strong className="text-purple-300 font-semibold">Live Preview Workspace</strong> & analisis file hingga 50 MB.
+              <strong className="text-blue-300 font-semibold">Live Preview Workspace</strong> & analisis file hingga 50 MB.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl text-left">
@@ -215,12 +210,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 className="glass-card p-4 rounded-2xl transition-all duration-200 group text-left relative overflow-hidden"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                  <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
                     <Layout className="w-4 h-4" />
                   </div>
-                  <ArrowUpRight className="w-4 h-4 text-gray-600 group-hover:text-purple-400 transition-colors" />
+                  <ArrowUpRight className="w-4 h-4 text-gray-600 group-hover:text-blue-400 transition-colors" />
                 </div>
-                <div className="text-sm font-bold text-gray-100 group-hover:text-purple-300 transition-colors mb-1">
+                <div className="text-sm font-bold text-gray-100 group-hover:text-blue-300 transition-colors mb-1">
                   Fullstack Web Dashboard
                 </div>
                 <div className="text-xs text-gray-400 leading-relaxed">
@@ -281,12 +276,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 className="glass-card p-4 rounded-2xl transition-all duration-200 group text-left relative overflow-hidden"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className="p-2 rounded-xl bg-pink-500/10 text-pink-400 border border-pink-500/20">
+                  <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
                     <Sparkles className="w-4 h-4" />
                   </div>
-                  <ArrowUpRight className="w-4 h-4 text-gray-600 group-hover:text-pink-400 transition-colors" />
+                  <ArrowUpRight className="w-4 h-4 text-gray-600 group-hover:text-cyan-300 transition-colors" />
                 </div>
-                <div className="text-sm font-bold text-gray-100 group-hover:text-pink-300 transition-colors mb-1">
+                <div className="text-sm font-bold text-gray-100 group-hover:text-cyan-300 transition-colors mb-1">
                   SVG Vector Graphic
                 </div>
                 <div className="text-xs text-gray-400 leading-relaxed">
@@ -306,13 +301,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             ))}
 
             {isLoading && (
-              <div className="py-5 px-4 md:px-6 bg-[#12151f]/50 border-y border-[#1e2334]">
+              <div className="py-5 px-4 md:px-6 bg-[#141724]/50 border-y border-[#202536]">
                 <div className="max-w-4xl mx-auto flex gap-4 items-center">
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-md shadow-purple-500/20">
-                    <Terminal className="w-4 h-4 animate-spin text-purple-200" />
+                  <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-900/30">
+                    <Terminal className="w-4 h-4 animate-spin text-white" />
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-purple-300 font-mono">
-                    <span className="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span>
+                  <div className="flex items-center gap-2 text-xs text-blue-300 font-mono">
+                    <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
                     Membangun kode & memproses tahapan proyek...
                   </div>
                 </div>
@@ -323,8 +318,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         )}
       </div>
 
-      {/* Luxury Glassmorphic Input Area with File Attachments */}
-      <div className="p-3 md:p-5 bg-[#0c0d10]/90 backdrop-blur border-t border-[#1e2230] shrink-0 z-10">
+      {/* Input Area */}
+      <div className="p-3 md:p-5 bg-[#0b0c10]/90 backdrop-blur border-t border-[#1e2332] shrink-0 z-10">
         <div className="max-w-4xl mx-auto relative">
           {/* Error Message Toast */}
           {errorMessage && (
@@ -334,18 +329,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </div>
           )}
 
-          <div className="relative flex flex-col rounded-2xl bg-[#141722] border border-[#242a3e] focus-within:border-purple-500/60 shadow-2xl transition-all">
+          <div className="relative flex flex-col rounded-2xl bg-[#141724] border border-[#222738] focus-within:border-blue-500/60 shadow-2xl transition-all">
             {/* Attached Files Chips Bar */}
             {attachments.length > 0 && (
-              <div className="px-4 py-2 border-b border-[#1e2434] flex flex-wrap gap-2">
+              <div className="px-4 py-2 border-b border-[#1e2332] flex flex-wrap gap-2">
                 {attachments.map((file) => (
                   <div
                     key={file.id}
-                    className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#1a1f30] border border-[#2c334a] text-xs text-gray-200 shadow-sm"
+                    className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#1a1f30] border border-[#282f44] text-xs text-gray-200 shadow-sm"
                   >
-                    <FileText className="w-3.5 h-3.5 text-purple-400" />
+                    <FileText className="w-3.5 h-3.5 text-blue-400" />
                     <span className="truncate max-w-[150px] font-mono text-[11px]">{file.name}</span>
-                    <span className="text-[10px] text-gray-500 font-mono">({formatFileSize(file.size)})</span>
+                    <span className="text-[10px] text-gray-400 font-mono">({formatFileSize(file.size)})</span>
                     <button
                       onClick={() => removeAttachment(file.id)}
                       className="p-0.5 text-gray-400 hover:text-red-400 transition-colors"
@@ -358,13 +353,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               </div>
             )}
 
-            {/* Quick Language Tag Selector Header */}
-            <div className="px-4 py-2 border-b border-[#1e2434] flex items-center justify-between text-[11px] text-gray-400 font-mono">
+            {/* Quick Language Selector Header */}
+            <div className="px-4 py-2 border-b border-[#1e2332] flex items-center justify-between text-[11px] text-gray-400 font-mono">
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">
                   HTML5
                 </span>
-                <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">
+                <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
                   CSS3
                 </span>
                 <span className="px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-300 border border-yellow-500/20">
@@ -373,7 +368,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
                   PHP
                 </span>
-                <span className="px-2 py-0.5 rounded bg-pink-500/10 text-pink-300 border border-pink-500/20">
+                <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
                   SVG
                 </span>
               </div>
@@ -384,7 +379,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               {/* Paperclip File Upload Trigger */}
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="p-3 text-gray-400 hover:text-purple-300 transition-colors"
+                className="p-3 text-gray-400 hover:text-blue-300 transition-colors"
                 title="Upload File (Maksimal 50 MB)"
               >
                 <Paperclip className="w-4 h-4" />
@@ -415,8 +410,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     disabled={!input.trim() && attachments.length === 0}
                     className={`p-2.5 rounded-xl transition-all shadow-lg ${
                       input.trim() || attachments.length > 0
-                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white cursor-pointer shadow-purple-900/40 border border-purple-400/30'
-                        : 'bg-[#1e2230] text-gray-600 cursor-not-allowed border border-[#2a2f42]'
+                        ? 'bg-blue-600 hover:bg-blue-500 text-white cursor-pointer shadow-blue-900/30 border border-blue-400/30'
+                        : 'bg-[#1b1f2c] text-gray-600 cursor-not-allowed border border-[#252b3c]'
                     }`}
                     title="Kirim Instruksi"
                   >

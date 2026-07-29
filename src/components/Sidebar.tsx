@@ -15,7 +15,6 @@ import {
   ChevronRight,
   ChevronDown,
   Sparkles,
-  Layers,
   Terminal,
   Cpu,
 } from 'lucide-react';
@@ -53,7 +52,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     if (ext === 'js' || ext === 'javascript' || ext === 'jsx' || ext === 'ts' || ext === 'tsx')
       return <Code2 className="w-4 h-4 text-yellow-400" />;
     if (ext === 'php') return <FileCode className="w-4 h-4 text-indigo-400" />;
-    if (ext === 'svg' || ext === 'png' || ext === 'jpg') return <Sparkles className="w-4 h-4 text-pink-400" />;
+    if (ext === 'svg' || ext === 'png' || ext === 'jpg') return <Sparkles className="w-4 h-4 text-cyan-400" />;
     return <FileText className="w-4 h-4 text-gray-400" />;
   };
 
@@ -68,26 +67,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-50 w-72 bg-[#101218] border-r border-[#1e2230] flex flex-col transition-transform duration-300 ease-in-out ${
+        className={`fixed md:static inset-y-0 left-0 z-50 w-72 bg-[#0f1117] border-r border-[#1e2332] flex flex-col transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
         }`}
       >
-        {/* Header Branding (Studio Workspace Style) */}
-        <div className="p-4 border-b border-[#1e2230] flex items-center justify-between bg-[#12141c]">
+        {/* Header Branding */}
+        <div className="p-4 border-b border-[#1e2332] flex items-center justify-between bg-[#121520]">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 p-0.5 shadow-lg shadow-indigo-500/20">
-              <div className="w-full h-full bg-[#101218] rounded-[10px] flex items-center justify-center">
-                <Terminal className="w-4 h-4 text-purple-300" />
-              </div>
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-900/30">
+              <Terminal className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h1 className="font-bold text-base text-white tracking-tight flex items-center gap-1.5 font-sans">
+              <h1 className="font-bold text-sm text-white tracking-tight flex items-center gap-1.5 font-sans">
                 Rdir Studio
-                <span className="text-[9px] px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300 font-semibold border border-purple-500/30 uppercase tracking-wider">
-                  Engine
+                <span className="text-[9px] px-1.5 py-0.2 rounded bg-blue-500/20 text-blue-300 font-semibold border border-blue-500/30 uppercase tracking-wider">
+                  Pro
                 </span>
               </h1>
-              <p className="text-[10px] text-gray-400 font-mono">Development Workspace</p>
+              <p className="text-[10px] text-gray-400 font-mono">Workspace Studio</p>
             </div>
           </div>
           <button
@@ -105,7 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onNewConversation();
               if (window.innerWidth < 768) onClose();
             }}
-            className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-500 hover:to-purple-500 text-white font-medium text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-900/30 transition-all duration-200 group border border-purple-500/30"
+            className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20 transition-all duration-200 group border border-blue-400/20"
           >
             <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
             <span>Sesi Proyek Baru</span>
@@ -113,16 +110,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Navigation Tabs */}
-        <div className="px-3 pb-2 flex gap-1 border-b border-[#1e2230]">
+        <div className="px-3 pb-2 flex gap-1 border-b border-[#1e2332]">
           <button
             onClick={() => setActiveTab('chats')}
             className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-colors ${
               activeTab === 'chats'
-                ? 'bg-[#181c28] border border-[#2a2f42] text-white shadow-sm'
+                ? 'bg-[#181c2a] border border-[#262c3e] text-white shadow-sm'
                 : 'text-gray-400 hover:text-gray-200'
             }`}
           >
-            <MessageSquare className="w-3.5 h-3.5 text-indigo-400" />
+            <MessageSquare className="w-3.5 h-3.5 text-blue-400" />
             Riwayat ({conversations.length})
           </button>
 
@@ -130,11 +127,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onClick={() => setActiveTab('files')}
             className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-colors ${
               activeTab === 'files'
-                ? 'bg-[#181c28] border border-[#2a2f42] text-white shadow-sm'
+                ? 'bg-[#181c2a] border border-[#262c3e] text-white shadow-sm'
                 : 'text-gray-400 hover:text-gray-200'
             }`}
           >
-            <Folder className="w-3.5 h-3.5 text-purple-400" />
+            <Folder className="w-3.5 h-3.5 text-amber-400" />
             Workspace ({files.length})
           </button>
         </div>
@@ -159,8 +156,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       key={conv.id}
                       className={`group relative flex items-center rounded-xl transition-all ${
                         isActive
-                          ? 'bg-[#181c28] border border-purple-500/40 text-white font-medium shadow-sm'
-                          : 'hover:bg-[#151822] text-gray-400 hover:text-gray-200'
+                          ? 'bg-[#181c2a] border border-blue-500/40 text-white font-medium shadow-sm'
+                          : 'hover:bg-[#151824] text-gray-400 hover:text-gray-200'
                       }`}
                     >
                       <button
@@ -172,7 +169,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       >
                         <MessageSquare
                           className={`w-3.5 h-3.5 shrink-0 ${
-                            isActive ? 'text-purple-400' : 'text-gray-500'
+                            isActive ? 'text-blue-400' : 'text-gray-500'
                           }`}
                         />
                         <span className="text-xs truncate">{conv.title}</span>
@@ -201,19 +198,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 className="w-full text-left flex items-center gap-2 px-2 py-1.5 text-xs font-semibold text-gray-300 hover:text-white transition-colors"
               >
                 {isFolderExpanded ? (
-                  <ChevronDown className="w-3.5 h-3.5 text-purple-400" />
+                  <ChevronDown className="w-3.5 h-3.5 text-blue-400" />
                 ) : (
-                  <ChevronRight className="w-3.5 h-3.5 text-purple-400" />
+                  <ChevronRight className="w-3.5 h-3.5 text-blue-400" />
                 )}
                 <Folder className="w-4 h-4 text-amber-400 fill-amber-400/20" />
                 <span className="font-mono">project / src</span>
-                <span className="ml-auto text-[10px] bg-[#1e2230] text-gray-400 px-1.5 py-0.5 rounded font-mono">
+                <span className="ml-auto text-[10px] bg-[#1e2332] text-gray-400 px-1.5 py-0.5 rounded font-mono">
                   {files.length}
                 </span>
               </button>
 
               {isFolderExpanded && (
-                <div className="pl-4 space-y-1 border-l border-[#1e2230] ml-3">
+                <div className="pl-4 space-y-1 border-l border-[#1e2332] ml-3">
                   {files.length === 0 ? (
                     <div className="p-3 text-center text-xs text-gray-500">
                       Belum ada file dalam workspace proyek.
@@ -226,11 +223,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           onOpenFile(file);
                           if (window.innerWidth < 768) onClose();
                         }}
-                        className="w-full text-left p-2 rounded-xl flex items-center gap-2.5 bg-[#141722]/80 hover:bg-[#1c2030] border border-[#222738] text-gray-200 hover:text-white text-xs transition-all group shadow-sm"
+                        className="w-full text-left p-2 rounded-xl flex items-center gap-2.5 bg-[#141724]/80 hover:bg-[#1a1f30] border border-[#202536] text-gray-200 hover:text-white text-xs transition-all group shadow-sm"
                       >
                         {getFileIcon(file.filename, file.language)}
                         <span className="truncate flex-1 font-mono text-[11px]">{file.filename}</span>
-                        <span className="opacity-0 group-hover:opacity-100 text-[10px] text-purple-300 font-semibold px-1.5 py-0.5 bg-purple-950/80 rounded border border-purple-500/30">
+                        <span className="opacity-0 group-hover:opacity-100 text-[10px] text-blue-300 font-semibold px-1.5 py-0.5 bg-blue-950/80 rounded border border-blue-500/30">
                           Inspect
                         </span>
                       </button>
@@ -243,8 +240,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Database Status Footer */}
-        <div className="p-3 border-t border-[#1e2230] bg-[#0d0f14]">
-          <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-[#141722] border border-[#202534] text-xs text-gray-400">
+        <div className="p-3 border-t border-[#1e2332] bg-[#0c0e14]">
+          <div className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-[#141724] border border-[#202536] text-xs text-gray-400">
             <Cpu className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
             <div className="flex-1 min-w-0">
               <div className="text-[11px] text-gray-200 font-medium truncate font-mono">

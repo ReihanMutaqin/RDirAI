@@ -8,7 +8,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeKatex from 'rehype-katex';
-import { User, Terminal, Copy, Check, Play, FileText, Image as ImageIcon, FileCode, Paperclip } from 'lucide-react';
+import { User, Terminal, Copy, Check, Play, FileText, Image as ImageIcon, FileCode } from 'lucide-react';
 
 import 'katex/dist/katex.min.css';
 
@@ -34,29 +34,29 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onOpenArtifac
   };
 
   const getFileIcon = (file: AttachedFile) => {
-    if (file.type.startsWith('image/')) return <ImageIcon className="w-4 h-4 text-pink-400" />;
+    if (file.type.startsWith('image/')) return <ImageIcon className="w-4 h-4 text-cyan-400" />;
     if (file.name.match(/\.(html|css|js|jsx|ts|tsx|php|py|json|sql)$/i))
-      return <FileCode className="w-4 h-4 text-purple-400" />;
-    return <FileText className="w-4 h-4 text-blue-400" />;
+      return <FileCode className="w-4 h-4 text-blue-400" />;
+    return <FileText className="w-4 h-4 text-gray-400" />;
   };
 
   return (
     <div
       className={`py-5 px-4 md:px-6 transition-all duration-200 ease-out ${
-        isUser ? 'bg-transparent' : 'bg-[#12151f]/50 border-y border-[#1c202e]'
+        isUser ? 'bg-transparent' : 'bg-[#141724]/50 border-y border-[#202536]'
       }`}
     >
       <div className="max-w-4xl mx-auto flex gap-4">
         {/* Avatar */}
         <div className="shrink-0">
           {isUser ? (
-            <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-600/30 border border-indigo-400/30">
+            <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-900/30 border border-blue-400/30">
               <User className="w-4 h-4" />
             </div>
           ) : (
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 p-0.5 shadow-md shadow-purple-500/20">
-              <div className="w-full h-full bg-[#101218] rounded-[10px] flex items-center justify-center">
-                <Terminal className="w-4 h-4 text-purple-300" />
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 p-0.5 shadow-md shadow-blue-900/20">
+              <div className="w-full h-full bg-[#10121a] rounded-[10px] flex items-center justify-center">
+                <Terminal className="w-4 h-4 text-blue-300" />
               </div>
             </div>
           )}
@@ -74,7 +74,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onOpenArtifac
 
             <button
               onClick={handleCopyMessage}
-              className="text-gray-500 hover:text-gray-300 p-1 rounded hover:bg-[#1a1e2b] transition-colors"
+              className="text-gray-500 hover:text-gray-300 p-1 rounded hover:bg-[#1a1f30] transition-colors"
               title="Salin Teks"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -87,11 +87,11 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onOpenArtifac
               {message.attachments.map((file) => (
                 <div
                   key={file.id}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#181c2a] border border-[#282e42] text-xs text-gray-200 shadow-sm"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#181c2a] border border-[#262c40] text-xs text-gray-200 shadow-sm"
                 >
                   {getFileIcon(file)}
-                  <div className="flex flex-col min-w-0 max-w-[180px]">
-                    <span className="truncate font-medium">{file.name}</span>
+                  <div className="flex flex-col min-w-0 max-w-[220px]">
+                    <span className="truncate font-mono font-medium">{file.name}</span>
                     <span className="text-[10px] text-gray-400 font-mono">
                       {formatFileSize(file.size)}
                     </span>
@@ -126,10 +126,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onOpenArtifac
 
                   if (!inline && match) {
                     return (
-                      <div className="my-3 rounded-xl overflow-hidden border border-[#24293a] bg-[#090b10] shadow-xl transition-all duration-200">
+                      <div className="my-3 rounded-xl overflow-hidden border border-[#222738] bg-[#090b10] shadow-xl transition-all duration-200">
                         {/* Code Block Header */}
-                        <div className="flex items-center justify-between px-3 py-1.5 bg-[#121520] border-b border-[#202534] text-xs text-gray-400">
-                          <span className="font-mono text-[11px] font-semibold text-purple-300 uppercase tracking-wider">
+                        <div className="flex items-center justify-between px-3 py-1.5 bg-[#121520] border-b border-[#202536] text-xs text-gray-400">
+                          <span className="font-mono text-[11px] font-semibold text-blue-300 uppercase tracking-wider">
                             {lang}
                           </span>
 
@@ -144,7 +144,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onOpenArtifac
                                     code: codeText,
                                   })
                                 }
-                                className="px-2.5 py-0.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-[11px] font-medium flex items-center gap-1 transition-all shadow-md shadow-purple-900/30 border border-purple-400/30"
+                                className="px-2.5 py-0.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-medium flex items-center gap-1 transition-all shadow-md shadow-blue-950/30 border border-blue-400/30"
                               >
                                 <Play className="w-3 h-3 fill-current" />
                                 Live View
@@ -170,7 +170,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onOpenArtifac
                   }
 
                   return (
-                    <code className="bg-[#1c202e] text-purple-300 px-1.5 py-0.5 rounded text-xs font-mono border border-purple-500/20" {...props}>
+                    <code className="bg-[#1a1e2c] text-blue-300 px-1.5 py-0.5 rounded text-xs font-mono border border-blue-500/20" {...props}>
                       {children}
                     </code>
                   );
