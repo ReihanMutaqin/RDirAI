@@ -138,7 +138,6 @@ export default function Home() {
           const code = match[3].trim();
 
           if (code) {
-            // Append or update existing file code to support continuation seamlessly
             const existing = fileMap.get(filename);
             if (existing) {
               fileMap.set(filename, {
@@ -387,6 +386,7 @@ export default function Home() {
       <main className="flex-1 flex overflow-hidden">
         <ChatInterface
           messages={messages}
+          generatedFiles={generatedFiles}
           isLoading={isLoading}
           selectedModel={selectedModel}
           onSelectModel={setSelectedModel}

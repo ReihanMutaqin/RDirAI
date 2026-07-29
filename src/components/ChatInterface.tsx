@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Message, CodeArtifact, AttachedFile } from '@/types/chat';
+import { Message, CodeArtifact, AttachedFile, GeneratedFile } from '@/types/chat';
 import { ChatMessage } from './ChatMessage';
 import { PhaseTracker } from './PhaseTracker';
+import { AllFilesDrawer } from './AllFilesDrawer';
 import {
   Menu,
   Send,
@@ -22,10 +23,12 @@ import {
   AlertCircle,
   Loader2,
   PlayCircle,
+  Folder,
 } from 'lucide-react';
 
 interface ChatInterfaceProps {
   messages: Message[];
+  generatedFiles?: GeneratedFile[];
   isLoading: boolean;
   selectedModel: string;
   onSelectModel: (modelId: string) => void;
@@ -41,6 +44,7 @@ const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   messages,
+  generatedFiles = [],
   isLoading,
   selectedModel,
   onSendMessage,
@@ -54,20 +58,19 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [attachments, setAttachments] = useState<AttachedFile[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [isAllFilesDrawerOpen, setIsAllFilesDrawerOpen] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Get current active assistant message phases during processing
   const lastMessage = messages[messages.length - 1];
   const activePhases =
     isLoading && lastMessage && lastMessage.role === 'assistant'
       ? lastMessage.phases
       : null;
 
-  // Timer while processing
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (isLoading) {
@@ -172,6 +175,22 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#0b0c10] relative overflow-hidden bg-grid-pattern">
+      {/* Kimi-style Right Drawer for "Semua File" */}
+      <AllFilesDrawer
+        isOpen={isAllFilesDrawerOpen}
+        files={generatedFiles}
+        onClose={() => setIsAllFilesDrawerOpen(false)}
+        onOpenFile={(file) =>
+          onOpenArtifact({
+            id: file.id,
+            title: `File: ${file.filename}`,
+            language: file.language,
+            code: file.code,
+            filename: file.filename,
+          })
+        }
+      />
+
       {/* Hidden File Input */}
       <input
         ref={fileInputRef}
@@ -215,12 +234,31 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           )}
         </div>
 
-        {activeArtifact && (
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-blue-950/60 border border-blue-500/30 text-blue-300 text-xs font-mono">
-            <Layout className="w-3.5 h-3.5 text-blue-400" />
-            <span className="truncate max-w-[180px]">{activeArtifact.title}</span>
-          </div>
-        )}
+        {/* Right Header Action Icons (Kimi-style "Semua file" button) */}
+        <div className="flex items-center gap-3">
+          {activeArtifact && (
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-blue-950/60 border border-blue-500/30 text-blue-300 text-xs font-mono">
+              <Layout className="w-3.5 h-3.5 text-blue-400" />
+              <span className="truncate max-w-[180px]">{activeArtifact.title}</span>
+            </div>
+          )}
+
+          <button
+            onClick={() => setIsAllFilesDrawerOpen(!isAllFilesDrawerOpen)}
+            className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all shadow-sm ${
+              isAllFilesDrawerOpen
+                ? 'bg-blue-600 border-blue-400 text-white shadow-blue-900/40'
+                : 'bg-[#181c2a] hover:bg-[#202538] border-[#282e44] text-gray-200 hover:text-white'
+            }`}
+            title="Buka Panel Semua File"
+          >
+            <Folder className="w-3.5 h-3.5 text-amber-400" />
+            <span className="font-sans">Semua file</span>
+            <span className="px-1.5 py-0.2 rounded-md bg-[#10131f] text-blue-300 font-mono text-[10px]">
+              {generatedFiles.length}
+            </span>
+          </button>
+        </div>
       </header>
 
       {/* Messages Scroll Viewport */}
@@ -344,6 +382,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   message={msg}
                   isLastAssistant={isLastAssistant}
                   onOpenArtifact={onOpenArtifact}
+                  onOpenAllFiles={() => setIsAllFilesDrawerOpen(true)}
                   onContinueGeneration={onContinueGeneration}
                 />
               );

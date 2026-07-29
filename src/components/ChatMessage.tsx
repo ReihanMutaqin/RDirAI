@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Message, CodeArtifact, AttachedFile } from '@/types/chat';
 import { PhaseTracker } from './PhaseTracker';
+import { FileCardWidget } from './FileCardWidget';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -16,6 +17,7 @@ interface ChatMessageProps {
   message: Message;
   isLastAssistant?: boolean;
   onOpenArtifact?: (artifact: CodeArtifact) => void;
+  onOpenAllFiles?: () => void;
   onContinueGeneration?: () => void;
 }
 
@@ -23,6 +25,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   message,
   isLastAssistant,
   onOpenArtifact,
+  onOpenAllFiles,
   onContinueGeneration,
 }) => {
   const [copied, setCopied] = useState(false);
@@ -47,14 +50,11 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     return <FileText className="w-4 h-4 text-gray-400" />;
   };
 
-  // Helper to check if output ended abruptly / code block unclosed
   const checkIsTruncated = (content: string) => {
     if (!content) return false;
     const backtickCount = (content.match(/```/g) || []).length;
-    // Odd number of ``` means a code block was cut off in the middle
     if (backtickCount % 2 !== 0) return true;
 
-    // Ends with incomplete code statements
     const trimmed = content.trim();
     if (
       trimmed.endsWith('require_once') ||
@@ -69,6 +69,26 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     return false;
   };
 
+  // Extract generated code files from content to display Kimi-style File Cards
+  const getCreatedFiles = (content: string) => {
+    if (isUser || !content) return [];
+    const files: { filename: string; language: string; code: string }[] = [];
+    const codeBlockRegex = /```(html|xml|svg|javascript|jsx|js|css|php|python|json|sql)?\s*([a-zA-Z0-9_\-\.]+\.[a-zA-Z0-9]+)?\n([\s\S]*?)```/gi;
+    let match;
+    let count = 1;
+    while ((match = codeBlockRegex.exec(content)) !== null) {
+      const lang = match[1]?.toLowerCase() || 'html';
+      const filename = match[2] || `index_${count}.${lang === 'javascript' ? 'js' : lang}`;
+      const code = match[3].trim();
+      if (code.length >= 10) {
+        files.push({ filename, language: lang, code });
+        count++;
+      }
+    }
+    return files;
+  };
+
+  const createdFiles = getCreatedFiles(message.content);
   const isTruncated = !isUser && (checkIsTruncated(message.content) || (isLastAssistant && message.content.length > 500));
 
   return (
@@ -211,6 +231,39 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               {message.content}
             </ReactMarkdown>
           </div>
+
+          {/* Kimi-style Interactive File Cards inside message bubble */}
+          {createdFiles.length > 0 && (
+            <div className="pt-2 space-y-2">
+              {createdFiles.map((file, idx) => (
+                <FileCardWidget
+                  key={`file_card_${idx}`}
+                  filename={file.filename}
+                  language={file.language}
+                  sizeKb={Number((file.code.length / 1024).toFixed(2))}
+                  onPreview={() =>
+                    onOpenArtifact &&
+                    onOpenArtifact({
+                      id: `artifact_${Date.now()}_${idx}`,
+                      title: `File: ${file.filename}`,
+                      language: file.language,
+                      code: file.code,
+                      filename: file.filename,
+                    })
+                  }
+                />
+              ))}
+
+              {/* Kimi-style "Semua file" summary card */}
+              {onOpenAllFiles && createdFiles.length > 1 && (
+                <FileCardWidget
+                  isAllFilesFolder={true}
+                  fileCount={createdFiles.length}
+                  onPreview={onOpenAllFiles}
+                />
+              )}
+            </div>
+          )}
 
           {/* Continue Generation Quick Button */}
           {isTruncated && onContinueGeneration && (
