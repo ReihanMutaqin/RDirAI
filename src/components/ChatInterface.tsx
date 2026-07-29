@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Message, CodeArtifact, AttachedFile } from '@/types/chat';
 import { ChatMessage } from './ChatMessage';
+import { PhaseTracker } from './PhaseTracker';
 import {
   Menu,
   Send,
@@ -20,7 +21,6 @@ import {
   FileText,
   AlertCircle,
   Loader2,
-  RefreshCw,
 } from 'lucide-react';
 
 interface ChatInterfaceProps {
@@ -56,6 +56,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Get current active assistant message phases during processing
+  const lastMessage = messages[messages.length - 1];
+  const activePhases =
+    isLoading && lastMessage && lastMessage.role === 'assistant'
+      ? lastMessage.phases
+      : null;
 
   // Timer while processing
   useEffect(() => {
@@ -334,32 +341,39 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               />
             ))}
 
-            {/* High Visibility Animated Processing Card */}
+            {/* High Visibility Animated Processing Card with Embedded Phase Execution Tracker */}
             {isLoading && (
-              <div className="py-5 px-4 md:px-6 bg-[#141826]/70 border-y border-blue-500/30 shadow-lg">
-                <div className="max-w-4xl mx-auto flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-900/40">
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-blue-200 flex items-center gap-2 font-mono">
-                        <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
-                        PROSES ENGINE SEDANG BERJALAN ({elapsedSeconds} detik)
+              <div className="py-5 px-4 md:px-6 bg-[#141826]/90 border-y border-blue-500/40 shadow-2xl">
+                <div className="max-w-4xl mx-auto space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-900/40">
+                        <Loader2 className="w-5 h-5 animate-spin" />
                       </div>
-                      <div className="text-[11px] text-gray-400 mt-0.5">
-                        Menganalisis instruksi, menyusun file workspace, & menulis jawaban...
+                      <div>
+                        <div className="text-xs font-bold text-blue-200 flex items-center gap-2 font-mono">
+                          <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+                          PROSES ENGINE SEDANG BERJALAN ({elapsedSeconds} detik)
+                        </div>
+                        <div className="text-[11px] text-gray-400 mt-0.5">
+                          Menyusun arsitektur file workspace & menulis kode secara real-time...
+                        </div>
                       </div>
                     </div>
+
+                    <button
+                      onClick={onStopStream}
+                      className="px-3 py-1.5 rounded-xl bg-red-950/80 hover:bg-red-900 border border-red-500/40 text-red-200 text-xs font-medium flex items-center gap-1.5 transition-colors shadow-sm shrink-0"
+                    >
+                      <Square className="w-3.5 h-3.5 fill-current" />
+                      Batalkan
+                    </button>
                   </div>
 
-                  <button
-                    onClick={onStopStream}
-                    className="px-3 py-1.5 rounded-xl bg-red-950/80 hover:bg-red-900 border border-red-500/40 text-red-200 text-xs font-medium flex items-center gap-1.5 transition-colors shadow-sm"
-                  >
-                    <Square className="w-3.5 h-3.5 fill-current" />
-                    Batalkan
-                  </button>
+                  {/* Always Pinned Phase Execution Timeline inside the Processing Card */}
+                  {activePhases && activePhases.length > 0 && (
+                    <PhaseTracker phases={activePhases} />
+                  )}
                 </div>
               </div>
             )}
