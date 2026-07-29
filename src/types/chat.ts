@@ -6,6 +6,7 @@ export interface Message {
   content: string;
   model?: string;
   created_at?: string;
+  phases?: GenerationPhase[];
 }
 
 export interface Conversation {
@@ -29,6 +30,23 @@ export interface CodeArtifact {
   title: string;
   language: string;
   code: string;
+  filename?: string;
+}
+
+export interface GeneratedFile {
+  id: string;
+  filename: string;
+  language: string;
+  code: string;
+  conversationId?: string;
+  createdAt?: string;
+}
+
+export interface GenerationPhase {
+  id: number;
+  title: string;
+  status: 'pending' | 'in_progress' | 'completed';
+  description?: string;
 }
 
 export const OPENROUTER_MODELS: ModelOption[] = [

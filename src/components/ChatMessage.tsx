@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Message, CodeArtifact } from '@/types/chat';
+import { PhaseTracker } from './PhaseTracker';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -65,7 +66,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onOpenArtifac
             </button>
           </div>
 
-          {/* Markdown Content with smooth text rendering */}
+          {/* Phase Execution Timeline Tracker if present */}
+          {message.phases && message.phases.length > 0 && (
+            <PhaseTracker phases={message.phases} />
+          )}
+
+          {/* Markdown Content */}
           <div className="prose prose-invert max-w-none text-sm leading-relaxed text-gray-200 transition-opacity duration-150">
             <ReactMarkdown
               remarkPlugins={[remarkGfm, remarkMath]}
@@ -77,10 +83,11 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onOpenArtifac
                   const lang = match ? match[1] : '';
 
                   const isLivePreviewable =
-                    ['html', 'xml', 'svg', 'javascript', 'js', 'jsx', 'css'].includes(lang.toLowerCase()) ||
+                    ['html', 'xml', 'svg', 'javascript', 'js', 'jsx', 'css', 'php'].includes(lang.toLowerCase()) ||
                     codeText.includes('<html') ||
                     codeText.includes('<div') ||
-                    codeText.includes('<svg');
+                    codeText.includes('<svg') ||
+                    codeText.includes('<?php');
 
                   if (!inline && match) {
                     return (

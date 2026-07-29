@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Conversation, Message, CodeArtifact } from '@/types/chat';
+import { Conversation, Message, CodeArtifact, GeneratedFile, GenerationPhase } from '@/types/chat';
 import { Sidebar } from '@/components/Sidebar';
 import { ChatInterface } from '@/components/ChatInterface';
 import { LiveView } from '@/components/LiveView';
@@ -10,6 +10,7 @@ export default function Home() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [generatedFiles, setGeneratedFiles] = useState<GeneratedFile[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>(
     process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'inclusionai/ling-3.0-flash:free'
   );
@@ -30,8 +31,14 @@ export default function Home() {
       fetchMessages(activeConvId);
     } else {
       setMessages([]);
+      setGeneratedFiles([]);
     }
   }, [activeConvId]);
+
+  // Extract all files from messages into workspace folder
+  useEffect(() => {
+    extractAllFilesFromMessages(messages);
+  }, [messages]);
 
   const fetchConversations = async () => {
     try {
@@ -61,6 +68,7 @@ export default function Home() {
     if (isLoading) handleStopStream();
     setActiveConvId(null);
     setMessages([]);
+    setGeneratedFiles([]);
     setActiveArtifact(null);
   };
 
@@ -82,21 +90,74 @@ export default function Home() {
     }
   };
 
-  // Helper to extract code blocks for automatic Live View triggering
+  // Extract code blocks from content into files array for Sidebar Folder Explorer
+  const extractAllFilesFromMessages = (msgList: Message[]) => {
+    const fileMap: Map<string, GeneratedFile> = new Map();
+    const codeBlockRegex = /```(html|xml|svg|javascript|jsx|js|css|php|python|json|sql)?\s*([a-zA-Z0-9_\-\.]+\.[a-zA-Z0-9]+)?\n([\s\S]*?)```/gi;
+
+    msgList.forEach((msg) => {
+      if (msg.role === 'assistant') {
+        let match;
+        let count = 1;
+        while ((match = codeBlockRegex.exec(msg.content)) !== null) {
+          const lang = match[1]?.toLowerCase() || 'html';
+          const filename = match[2] || `file_${count}.${lang === 'javascript' ? 'js' : lang}`;
+          const code = match[3].trim();
+
+          if (code) {
+            fileMap.set(filename, {
+              id: `file_${filename}_${Date.now()}`,
+              filename,
+              language: lang,
+              code,
+            });
+            count++;
+          }
+        }
+      }
+    });
+
+    setGeneratedFiles(Array.from(fileMap.values()));
+  };
+
   const extractArtifactFromContent = (content: string): CodeArtifact | null => {
-    const codeBlockRegex = /```(html|xml|svg|javascript|jsx|js|css)\n([\s\S]*?)```/i;
+    const codeBlockRegex = /```(html|xml|svg|javascript|jsx|js|css|php)\s*([a-zA-Z0-9_\-\.]+\.[a-zA-Z0-9]+)?\n([\s\S]*?)```/i;
     const match = content.match(codeBlockRegex);
     if (match) {
       const lang = match[1].toLowerCase();
-      const code = match[2].trim();
+      const filename = match[2] || `index.${lang === 'javascript' ? 'js' : lang}`;
+      const code = match[3].trim();
       return {
         id: `artifact_${Date.now()}`,
-        title: `Hasil Kode (${lang.toUpperCase()})`,
+        title: filename ? `File: ${filename}` : `${lang.toUpperCase()} Preview`,
         language: lang,
         code,
+        filename,
       };
     }
     return null;
+  };
+
+  // Generate multi-phase execution timeline for code requests
+  const createPhasesForPrompt = (promptText: string): GenerationPhase[] => {
+    const lower = promptText.toLowerCase();
+    if (
+      lower.includes('buat') ||
+      lower.includes('web') ||
+      lower.includes('html') ||
+      lower.includes('code') ||
+      lower.includes('aplikasi') ||
+      lower.includes('dashboard') ||
+      lower.includes('php')
+    ) {
+      return [
+        { id: 1, title: 'Phase 1: Analisis Kebutuhan & Struktur HTML/PHP', status: 'in_progress' },
+        { id: 2, title: 'Phase 2: Desain Visual & Styling CSS/Tailwind', status: 'pending' },
+        { id: 3, title: 'Phase 3: Implementasi Logic JavaScript & Functionality', status: 'pending' },
+        { id: 4, title: 'Phase 4: Integrasi Workspace & Live View Preview', status: 'pending' },
+      ];
+    }
+    return [];
   };
 
   const handleSendMessage = async (text: string) => {
@@ -111,6 +172,8 @@ export default function Home() {
     setMessages(newMessages);
     setIsLoading(true);
 
+    const initialPhases = createPhasesForPrompt(text);
+
     const assistantMsgId = `msg_a_${Date.now()}`;
     const initialAssistantMsg: Message = {
       id: assistantMsgId,
@@ -118,6 +181,7 @@ export default function Home() {
       content: '',
       model: selectedModel,
       created_at: new Date().toISOString(),
+      phases: initialPhases,
     };
 
     setMessages((prev) => [...prev, initialAssistantMsg]);
@@ -159,12 +223,26 @@ export default function Home() {
         const chunk = decoder.decode(value, { stream: true });
         accumulated += chunk;
 
-        // Smooth text rendering batching
+        // Dynamic phase progress update as response arrives
+        const updatedPhases = initialPhases.map((p) => {
+          if (accumulated.length > 500 && p.id === 1) return { ...p, status: 'completed' as const };
+          if (accumulated.length > 500 && accumulated.length <= 1500 && p.id === 2)
+            return { ...p, status: 'in_progress' as const };
+          if (accumulated.length > 1500 && p.id === 2) return { ...p, status: 'completed' as const };
+          if (accumulated.length > 1500 && accumulated.length <= 3000 && p.id === 3)
+            return { ...p, status: 'in_progress' as const };
+          if (accumulated.length > 3000 && p.id === 3) return { ...p, status: 'completed' as const };
+          if (accumulated.length > 3000 && p.id === 4) return { ...p, status: 'in_progress' as const };
+          return p;
+        });
+
         if (pendingAnimation) cancelAnimationFrame(pendingAnimation);
         pendingAnimation = requestAnimationFrame(() => {
           setMessages((prev) =>
             prev.map((m) =>
-              m.id === assistantMsgId ? { ...m, content: accumulated } : m
+              m.id === assistantMsgId
+                ? { ...m, content: accumulated, phases: updatedPhases }
+                : m
             )
           );
 
@@ -173,6 +251,14 @@ export default function Home() {
             setActiveArtifact(artifact);
           }
         });
+      }
+
+      // Mark all phases completed at stream end
+      if (initialPhases.length > 0) {
+        const finalPhases = initialPhases.map((p) => ({ ...p, status: 'completed' as const }));
+        setMessages((prev) =>
+          prev.map((m) => (m.id === assistantMsgId ? { ...m, phases: finalPhases } : m))
+        );
       }
     } catch (err: any) {
       if (err.name !== 'AbortError') {
@@ -204,15 +290,27 @@ export default function Home() {
     }
   };
 
+  const handleOpenFileInLiveView = (file: GeneratedFile) => {
+    setActiveArtifact({
+      id: file.id,
+      title: `File: ${file.filename}`,
+      language: file.language,
+      code: file.code,
+      filename: file.filename,
+    });
+  };
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-kimi-bg">
-      {/* Sidebar Navigation */}
+      {/* Sidebar Navigation & Folder Workspace Explorer */}
       <Sidebar
         conversations={conversations}
         activeId={activeConvId}
+        files={generatedFiles}
         onSelectConversation={handleSelectConversation}
         onNewConversation={handleNewConversation}
         onDeleteConversation={handleDeleteConversation}
+        onOpenFile={handleOpenFileInLiveView}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />

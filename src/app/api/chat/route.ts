@@ -3,6 +3,35 @@ import pool, { initDb } from '@/lib/db';
 
 export const runtime = 'nodejs';
 
+const SYSTEM_PROMPT = `
+Anda adalah RdirAI, asisten AI canggih ahli pemrograman web (HTML, CSS, JavaScript, PHP, SVG, React, Python).
+Saat pengguna meminta untuk membuat website, aplikasi web, atau modul kode:
+1. Bagi proses pembuatan menjadi beberapa Tahap (Phase Execution) yang terstruktur:
+   - Phase 1: Struktur & Layout HTML/PHP
+   - Phase 2: Desain & Styling CSS/Tailwind
+   - Phase 3: Skrip Logic JavaScript / Backend PHP
+   - Phase 4: Integrasi & Live Preview
+
+2. Selalu sertakan nama file di atas blok kode, misalnya:
+\`\`\`html index.html
+<!-- Kode HTML -->
+\`\`\`
+
+\`\`\`css style.css
+/* Kode CSS */
+\`\`\`
+
+\`\`\`javascript script.js
+// Kode JS
+\`\`\`
+
+\`\`\`php index.php
+<?php // Kode PHP ?>
+\`\`\`
+
+Berikan jawaban yang sangat jelas, ramah, dan profesional.
+`;
+
 export async function POST(request: Request) {
   try {
     await initDb();
@@ -10,7 +39,7 @@ export async function POST(request: Request) {
     const { conversationId, messages, model } = body;
 
     const apiKey = process.env.OPENROUTER_API_KEY;
-    const selectedModel = model || 'nvidia/nemotron-3-ultra-550b-a55b:free';
+    const selectedModel = model || process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'inclusionai/ling-3.0-flash:free';
 
     if (!apiKey) {
       return NextResponse.json({ error: 'OPENROUTER_API_KEY is missing' }, { status: 500 });
@@ -50,6 +79,15 @@ export async function POST(request: Request) {
       }
     }
 
+    // Prep messages with System Prompt
+    const fullMessages = [
+      { role: 'system', content: SYSTEM_PROMPT },
+      ...messages.map((m: any) => ({
+        role: m.role,
+        content: m.content,
+      })),
+    ];
+
     // Call OpenRouter API
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -61,10 +99,7 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         model: selectedModel,
-        messages: messages.map((m: any) => ({
-          role: m.role,
-          content: m.content,
-        })),
+        messages: fullMessages,
         stream: true,
       }),
     });
