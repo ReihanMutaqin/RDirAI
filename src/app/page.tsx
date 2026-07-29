@@ -141,29 +141,17 @@ export default function Home() {
     return null;
   };
 
-  const createPhasesForPrompt = (promptText: string): GenerationPhase[] => {
-    const lower = promptText.toLowerCase();
-    if (
-      lower.includes('buat') ||
-      lower.includes('web') ||
-      lower.includes('html') ||
-      lower.includes('code') ||
-      lower.includes('aplikasi') ||
-      lower.includes('dashboard') ||
-      lower.includes('php')
-    ) {
-      return [
-        { id: 1, title: 'Phase 1: Analisis Kebutuhan & Struktur HTML/PHP', status: 'in_progress' },
-        { id: 2, title: 'Phase 2: Desain Visual & Styling CSS/Tailwind', status: 'pending' },
-        { id: 3, title: 'Phase 3: Implementasi Logic JavaScript & Functionality', status: 'pending' },
-        { id: 4, title: 'Phase 4: Integrasi Workspace & Live View Preview', status: 'pending' },
-      ];
-    }
-    return [];
+  // Standard 4-Phase Development Workflow
+  const createPhasesForPrompt = (): GenerationPhase[] => {
+    return [
+      { id: 1, title: 'Phase 1: Analisis Instruksi & Arsitektur Kode', status: 'in_progress', description: 'Menganalisis permintaan & menyiapkan struktur' },
+      { id: 2, title: 'Phase 2: Generasi & Styling Komponen Web', status: 'pending', description: 'Menulis struktur HTML, Tailwind & UI' },
+      { id: 3, title: 'Phase 3: Penulisan Skrip Logic & Functionality', status: 'pending', description: 'Menyusun logika JavaScript / PHP Engine' },
+      { id: 4, title: 'Phase 4: Sinkronisasi Workspace & Live View', status: 'pending', description: 'Memverifikasi pratinjau & menyelaraskan file' },
+    ];
   };
 
   const handleSendMessage = async (text: string, attachments?: AttachedFile[]) => {
-    // Format full prompt text including attached files context
     let fullPromptContent = text;
 
     if (attachments && attachments.length > 0) {
@@ -196,7 +184,7 @@ export default function Home() {
     setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
 
-    const initialPhases = createPhasesForPrompt(text || fullPromptContent);
+    const initialPhases = createPhasesForPrompt();
 
     const assistantMsgId = `msg_a_${Date.now()}`;
     const initialAssistantMsg: Message = {
@@ -247,15 +235,14 @@ export default function Home() {
         const chunk = decoder.decode(value, { stream: true });
         accumulated += chunk;
 
-        const updatedPhases = initialPhases.map((p) => {
-          if (accumulated.length > 500 && p.id === 1) return { ...p, status: 'completed' as const };
-          if (accumulated.length > 500 && accumulated.length <= 1500 && p.id === 2)
-            return { ...p, status: 'in_progress' as const };
-          if (accumulated.length > 1500 && p.id === 2) return { ...p, status: 'completed' as const };
-          if (accumulated.length > 1500 && accumulated.length <= 3000 && p.id === 3)
-            return { ...p, status: 'in_progress' as const };
-          if (accumulated.length > 3000 && p.id === 3) return { ...p, status: 'completed' as const };
-          if (accumulated.length > 3000 && p.id === 4) return { ...p, status: 'in_progress' as const };
+        const hasCodeBlock = accumulated.includes('```');
+        const hasSecondBlock = (accumulated.match(/```/g) || []).length >= 4;
+
+        const updatedPhases: GenerationPhase[] = initialPhases.map((p) => {
+          if (p.id === 1) return { ...p, status: 'completed' };
+          if (p.id === 2) return { ...p, status: hasCodeBlock ? 'completed' : 'in_progress' };
+          if (p.id === 3) return { ...p, status: hasCodeBlock ? (hasSecondBlock ? 'completed' : 'in_progress') : 'pending' };
+          if (p.id === 4) return { ...p, status: hasSecondBlock ? 'in_progress' : 'pending' };
           return p;
         });
 
@@ -276,12 +263,10 @@ export default function Home() {
         });
       }
 
-      if (initialPhases.length > 0) {
-        const finalPhases = initialPhases.map((p) => ({ ...p, status: 'completed' as const }));
-        setMessages((prev) =>
-          prev.map((m) => (m.id === assistantMsgId ? { ...m, phases: finalPhases } : m))
-        );
-      }
+      const finalPhases: GenerationPhase[] = initialPhases.map((p) => ({ ...p, status: 'completed' }));
+      setMessages((prev) =>
+        prev.map((m) => (m.id === assistantMsgId ? { ...m, phases: finalPhases } : m))
+      );
     } catch (err: any) {
       if (err.name !== 'AbortError') {
         console.error('Streaming Error:', err);
