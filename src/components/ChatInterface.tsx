@@ -18,8 +18,9 @@ import {
   Paperclip,
   X,
   FileText,
-  Image as ImageIcon,
   AlertCircle,
+  Loader2,
+  RefreshCw,
 } from 'lucide-react';
 
 interface ChatInterfaceProps {
@@ -49,11 +50,26 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [input, setInput] = useState('');
   const [attachments, setAttachments] = useState<AttachedFile[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Timer while processing
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isLoading) {
+      setElapsedSeconds(0);
+      timer = setInterval(() => {
+        setElapsedSeconds((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setElapsedSeconds(0);
+    }
+    return () => clearInterval(timer);
+  }, [isLoading]);
 
   const scrollToBottomSmooth = () => {
     if (scrollContainerRef.current) {
@@ -100,7 +116,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     const reader = new FileReader();
 
     if (file.type.startsWith('image/')) {
-      // Images read as base64 Data URL
       reader.onload = (e) => {
         const base64Content = e.target?.result as string;
         const newFile: AttachedFile = {
@@ -114,7 +129,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       };
       reader.readAsDataURL(file);
     } else {
-      // All code/text/config files (.env, .gitignore, .json, .txt, etc.) read as Plain Text
       reader.onload = (e) => {
         const textContent = (e.target?.result as string) || '';
         const newFile: AttachedFile = {
@@ -148,7 +162,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   return (
     <div className="flex-1 flex flex-col h-full bg-[#0b0c10] relative overflow-hidden bg-grid-pattern">
-      {/* Hidden File Input (Max 50MB) */}
+      {/* Hidden File Input */}
       <input
         ref={fileInputRef}
         type="file"
@@ -160,8 +174,15 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       {/* Background Radial Glow */}
       <div className="absolute inset-0 bg-glow-radial pointer-events-none" />
 
+      {/* Top Processing Progress Bar */}
+      {isLoading && (
+        <div className="absolute top-0 left-0 right-0 h-1 bg-blue-600/30 z-30 overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-blue-500 via-cyan-400 to-indigo-500 w-1/3 animate-[slide_1.5s_infinite_linear]" />
+        </div>
+      )}
+
       {/* Top Header Bar */}
-      <header className="h-14 border-b border-[#1e2332] px-4 flex items-center justify-between bg-[#121520]/80 backdrop-blur shrink-0 z-10">
+      <header className="h-14 border-b border-[#1e2332] px-4 flex items-center justify-between bg-[#121520]/90 backdrop-blur shrink-0 z-10">
         <div className="flex items-center gap-3">
           <button
             onClick={onOpenSidebar}
@@ -169,6 +190,19 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           >
             <Menu className="w-5 h-5" />
           </button>
+
+          {/* Prominent Real-time Status Badge */}
+          {isLoading ? (
+            <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-blue-950/80 border border-blue-500/50 text-blue-200 text-xs font-medium shadow-md shadow-blue-950/40 animate-pulse">
+              <Loader2 className="w-3.5 h-3.5 text-blue-400 animate-spin" />
+              <span className="font-semibold font-mono">SEDANG MEMPROSES... ({elapsedSeconds}s)</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-[#181c2a] border border-[#262c3e] text-gray-400 text-xs font-mono">
+              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span>System Ready</span>
+            </div>
+          )}
         </div>
 
         {activeArtifact && (
@@ -300,16 +334,32 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               />
             ))}
 
+            {/* High Visibility Animated Processing Card */}
             {isLoading && (
-              <div className="py-5 px-4 md:px-6 bg-[#141724]/50 border-y border-[#202536]">
-                <div className="max-w-4xl mx-auto flex gap-4 items-center">
-                  <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-900/30">
-                    <Terminal className="w-4 h-4 animate-spin text-white" />
+              <div className="py-5 px-4 md:px-6 bg-[#141826]/70 border-y border-blue-500/30 shadow-lg">
+                <div className="max-w-4xl mx-auto flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-900/40">
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-blue-200 flex items-center gap-2 font-mono">
+                        <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+                        PROSES ENGINE SEDANG BERJALAN ({elapsedSeconds} detik)
+                      </div>
+                      <div className="text-[11px] text-gray-400 mt-0.5">
+                        Menganalisis instruksi, menyusun file workspace, & menulis jawaban...
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-blue-300 font-mono">
-                    <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
-                    Membangun kode & memproses tahapan proyek...
-                  </div>
+
+                  <button
+                    onClick={onStopStream}
+                    className="px-3 py-1.5 rounded-xl bg-red-950/80 hover:bg-red-900 border border-red-500/40 text-red-200 text-xs font-medium flex items-center gap-1.5 transition-colors shadow-sm"
+                  >
+                    <Square className="w-3.5 h-3.5 fill-current" />
+                    Batalkan
+                  </button>
                 </div>
               </div>
             )}
@@ -323,9 +373,17 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         <div className="max-w-4xl mx-auto relative">
           {/* Error Message Toast */}
           {errorMessage && (
-            <div className="mb-3 p-3 rounded-xl bg-red-950/80 border border-red-500/40 text-red-200 text-xs flex items-center gap-2 animate-in fade-in duration-200">
-              <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
-              <span>{errorMessage}</span>
+            <div className="mb-3 p-3 rounded-xl bg-red-950/80 border border-red-500/40 text-red-200 text-xs flex items-center justify-between animate-in fade-in duration-200">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                <span>{errorMessage}</span>
+              </div>
+              <button
+                onClick={() => setErrorMessage(null)}
+                className="text-red-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           )}
 
@@ -399,7 +457,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 {isLoading ? (
                   <button
                     onClick={onStopStream}
-                    className="p-2 rounded-xl bg-red-600 hover:bg-red-500 text-white transition-colors shadow-lg"
+                    className="p-2 rounded-xl bg-red-600 hover:bg-red-500 text-white transition-colors shadow-lg flex items-center gap-1 text-xs font-medium"
                     title="Hentikan Proses"
                   >
                     <Square className="w-4 h-4 fill-current" />
