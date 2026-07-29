@@ -1,12 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Conversation, Message, CodeArtifact, GeneratedFile, GenerationPhase, AttachedFile } from '@/types/chat';
+import { Conversation, Message, CodeArtifact, GeneratedFile, GenerationPhase, AttachedFile, UserProfile } from '@/types/chat';
 import { Sidebar } from '@/components/Sidebar';
 import { ChatInterface } from '@/components/ChatInterface';
 import { LiveView } from '@/components/LiveView';
+import { AuthModal } from '@/components/AuthModal';
 
 export default function Home() {
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -20,10 +23,15 @@ export default function Home() {
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Fetch initial conversations from TiDB database
+  // Fetch logged in user profile on load
+  useEffect(() => {
+    checkCurrentUser();
+  }, []);
+
+  // Fetch initial conversations whenever user state changes
   useEffect(() => {
     fetchConversations();
-  }, []);
+  }, [user]);
 
   // Fetch messages when active conversation changes
   useEffect(() => {
@@ -39,6 +47,31 @@ export default function Home() {
   useEffect(() => {
     extractAllFilesFromMessages(messages);
   }, [messages]);
+
+  const checkCurrentUser = async () => {
+    try {
+      const res = await fetch('/api/auth/me');
+      const data = await res.json();
+      if (data.user) {
+        setUser(data.user);
+      } else {
+        setUser(null);
+      }
+    } catch (err) {
+      console.error('Error checking auth session:', err);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setUser(null);
+      handleNewConversation();
+      fetchConversations();
+    } catch (err) {
+      console.error('Error logging out:', err);
+    }
+  };
 
   const fetchConversations = async () => {
     try {
@@ -141,7 +174,6 @@ export default function Home() {
     return null;
   };
 
-  // Standard 4-Phase Development Workflow
   const createPhasesForPrompt = (): GenerationPhase[] => {
     return [
       { id: 1, title: 'Phase 1: Analisis Instruksi & Arsitektur Kode', status: 'in_progress', description: 'Menganalisis permintaan & menyiapkan struktur' },
@@ -309,15 +341,28 @@ export default function Home() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-kimi-bg">
+      {/* Auth Modal for Login & Register */}
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+        onSuccess={(loggedUser) => {
+          setUser(loggedUser);
+          fetchConversations();
+        }}
+      />
+
       {/* Sidebar Navigation */}
       <Sidebar
         conversations={conversations}
         activeId={activeConvId}
         files={generatedFiles}
+        user={user}
         onSelectConversation={handleSelectConversation}
         onNewConversation={handleNewConversation}
         onDeleteConversation={handleDeleteConversation}
         onOpenFile={handleOpenFileInLiveView}
+        onOpenAuth={() => setIsAuthOpen(true)}
+        onLogout={handleLogout}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />

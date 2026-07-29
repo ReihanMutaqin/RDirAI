@@ -1,30 +1,35 @@
 import { NextResponse } from 'next/server';
 import pool, { initDb } from '@/lib/db';
+import { cookies } from 'next/headers';
 
 export const runtime = 'nodejs';
+
+async function getCurrentUserId(): Promise<string> {
+  try {
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get('rdir_session');
+    if (sessionCookie && sessionCookie.value) {
+      const user = JSON.parse(sessionCookie.value);
+      if (user.id) return user.id;
+    }
+  } catch (e) {}
+  return 'guest_user';
+}
 
 const SYSTEM_PROMPT = `
 Anda adalah RdirAI, asisten AI canggih ahli pemrograman web (HTML, CSS, JavaScript, PHP, SVG, React, Python).
 Saat pengguna meminta untuk membuat website, aplikasi web, atau modul kode:
-1. Bagi proses pembuatan menjadi beberapa Tahap (Phase Execution) yang terstruktur:
-   - Phase 1: Struktur & Layout HTML/PHP
-   - Phase 2: Desain & Styling CSS/Tailwind
-   - Phase 3: Skrip Logic JavaScript / Backend PHP
-   - Phase 4: Integrasi & Live Preview
-
+1. Bagi proses pembuatan menjadi beberapa Tahap (Phase Execution) yang terstruktur.
 2. Selalu sertakan nama file di atas blok kode, misalnya:
 \`\`\`html index.html
 <!-- Kode HTML -->
 \`\`\`
-
 \`\`\`css style.css
 /* Kode CSS */
 \`\`\`
-
 \`\`\`javascript script.js
 // Kode JS
 \`\`\`
-
 \`\`\`php index.php
 <?php // Kode PHP ?>
 \`\`\`
@@ -35,6 +40,7 @@ Berikan jawaban yang sangat jelas, ramah, dan profesional.
 export async function POST(request: Request) {
   try {
     await initDb();
+    const userId = await getCurrentUserId();
     const body = await request.json();
     const { conversationId, messages, model } = body;
 
@@ -51,15 +57,15 @@ export async function POST(request: Request) {
 
     const lastUserMessage = messages[messages.length - 1];
 
-    // Ensure conversation exists in TiDB
+    // Ensure conversation exists in TiDB (bound to userId)
     let currentConvId = conversationId;
     if (!currentConvId) {
       currentConvId = `conv_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
       const title = lastUserMessage?.content?.substring(0, 40) || 'Percakapan AI Baru';
       try {
         await pool.query(
-          'INSERT INTO conversations (id, title, model) VALUES (?, ?, ?)',
-          [currentConvId, title, selectedModel]
+          'INSERT INTO conversations (id, user_id, title, model) VALUES (?, ?, ?, ?)',
+          [currentConvId, userId, title, selectedModel]
         );
       } catch (err) {
         console.error('Failed to auto-create conversation in TiDB:', err);
@@ -150,7 +156,7 @@ export async function POST(request: Request) {
                     controller.enqueue(encoder.encode(content));
                   }
                 } catch (e) {
-                  // Ignore JSON parse errors for incomplete chunks
+                  // Ignore JSON parse errors
                 }
               }
             }

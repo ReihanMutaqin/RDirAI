@@ -1,5 +1,11 @@
 export type Role = 'user' | 'assistant' | 'system';
 
+export interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+}
+
 export interface AttachedFile {
   id: string;
   name: string;
@@ -20,6 +26,7 @@ export interface Message {
 
 export interface Conversation {
   id: string;
+  user_id?: string;
   title: string;
   model: string;
   created_at?: string;

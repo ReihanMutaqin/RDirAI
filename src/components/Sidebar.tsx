@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Conversation, GeneratedFile } from '@/types/chat';
+import { Conversation, GeneratedFile, UserProfile } from '@/types/chat';
 import {
   Plus,
   MessageSquare,
@@ -17,16 +17,22 @@ import {
   Sparkles,
   Terminal,
   Cpu,
+  LogIn,
+  LogOut,
+  UserCheck,
 } from 'lucide-react';
 
 interface SidebarProps {
   conversations: Conversation[];
   activeId: string | null;
   files: GeneratedFile[];
+  user: UserProfile | null;
   onSelectConversation: (id: string) => void;
   onNewConversation: () => void;
   onDeleteConversation: (id: string) => void;
   onOpenFile: (file: GeneratedFile) => void;
+  onOpenAuth: () => void;
+  onLogout: () => void;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -35,10 +41,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
   conversations,
   activeId,
   files,
+  user,
   onSelectConversation,
   onNewConversation,
   onDeleteConversation,
   onOpenFile,
+  onOpenAuth,
+  onLogout,
   isOpen,
   onClose,
 }) => {
@@ -93,6 +102,41 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* User Profile / Login Bar */}
+        <div className="p-3 bg-[#121522] border-b border-[#1e2332]">
+          {user ? (
+            <div className="flex items-center justify-between p-2 rounded-xl bg-[#181c2a] border border-[#262c3e]">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                  {user.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold text-gray-100 truncate flex items-center gap-1">
+                    <span>{user.name}</span>
+                    <UserCheck className="w-3 h-3 text-emerald-400" />
+                  </div>
+                  <div className="text-[10px] text-gray-400 truncate font-mono">{user.email}</div>
+                </div>
+              </div>
+              <button
+                onClick={onLogout}
+                className="p-1.5 text-gray-400 hover:text-red-400 rounded-lg hover:bg-red-950/40 transition-colors"
+                title="Keluar / Logout"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={onOpenAuth}
+              className="w-full py-2 px-3 rounded-xl bg-[#1a1f30] hover:bg-[#22283e] border border-[#2a3148] text-blue-300 font-medium text-xs flex items-center justify-center gap-2 transition-colors shadow-sm"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Masuk Akun (Isolasi Chat Privat)</span>
+            </button>
+          )}
         </div>
 
         {/* New Session Button */}
@@ -245,11 +289,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <Cpu className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
             <div className="flex-1 min-w-0">
               <div className="text-[11px] text-gray-200 font-medium truncate font-mono">
-                TiDB Cloud Engine
+                TiDB Multi-User DB
               </div>
               <div className="text-[10px] text-emerald-400 flex items-center gap-1 font-mono">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                Connected (ap-southeast-1)
+                Privat & Terisolasi
               </div>
             </div>
           </div>

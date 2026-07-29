@@ -21,16 +21,36 @@ export async function initDb() {
   try {
     const connection = await pool.getConnection();
 
-    // Create conversations table
+    // Create users table for strict data isolation
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id VARCHAR(64) PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `);
+
+    // Create conversations table with user_id scoping
     await connection.query(`
       CREATE TABLE IF NOT EXISTS conversations (
         id VARCHAR(64) PRIMARY KEY,
+        user_id VARCHAR(64) DEFAULT 'default_user',
         title VARCHAR(255) NOT NULL,
         model VARCHAR(128) NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_user (user_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `);
+
+    // Ensure user_id column exists if table was created previously
+    try {
+      await connection.query(`ALTER TABLE conversations ADD COLUMN user_id VARCHAR(64) DEFAULT 'default_user';`);
+    } catch (e) {
+      // Column already exists
+    }
 
     // Create messages table
     await connection.query(`
@@ -38,7 +58,7 @@ export async function initDb() {
         id VARCHAR(64) PRIMARY KEY,
         conversation_id VARCHAR(64) NOT NULL,
         role ENUM('user', 'assistant', 'system') NOT NULL,
-        content TEXT NOT NULL,
+        content LONGTEXT NOT NULL,
         model VARCHAR(128),
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         INDEX idx_conversation (conversation_id),
@@ -48,7 +68,7 @@ export async function initDb() {
 
     connection.release();
     dbInitialized = true;
-    console.log('TiDB database initialized successfully.');
+    console.log('TiDB multi-user isolated database schema initialized successfully.');
   } catch (error) {
     console.error('Failed to initialize TiDB database tables:', error);
   }
