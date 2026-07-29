@@ -91,14 +91,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Engine Status Badge */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#161922] border border-[#252b3c] text-gray-200 text-xs font-medium shadow-sm">
-            <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400 animate-pulse" />
-            <span className="font-mono text-purple-300 font-semibold">Ling Engine Pro</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
-              Ready
-            </span>
-          </div>
+          {/* Clean Top Header Bar */}
         </div>
 
         {activeArtifact && (
