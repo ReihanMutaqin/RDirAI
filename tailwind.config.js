@@ -9,28 +9,14 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        brand: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          500: '#0284c7',
-          600: '#0284c7',
-          700: '#0369a1',
-          900: '#0c4a6e',
-        },
         kimi: {
-          bg: '#141416',
-          sidebar: '#1a1a1e',
-          card: '#222227',
-          border: '#2e2e36',
-          accent: '#7c5cff',
-          hover: '#292930',
+          bg: '#0c0d10',
+          sidebar: '#12141a',
+          card: '#181b24',
+          border: '#222634',
+          accent: '#8b5cf6',
+          hover: '#1e2230',
         },
-        claude: {
-          bg: '#181816',
-          sidebar: '#1f1e1b',
-          card: '#272622',
-          accent: '#d97706',
-        }
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

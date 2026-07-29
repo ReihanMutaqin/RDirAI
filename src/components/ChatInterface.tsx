@@ -8,11 +8,16 @@ import {
   Send,
   Square,
   Sparkles,
-  Bot,
   Code,
   Layout,
   Cpu,
   Zap,
+  Terminal,
+  Layers,
+  Globe,
+  FileCode,
+  ArrowUpRight,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface ChatInterfaceProps {
@@ -42,7 +47,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Smooth scroll to bottom during streaming
   const scrollToBottomSmooth = () => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
@@ -73,31 +77,34 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-kimi-bg relative overflow-hidden">
+    <div className="flex-1 flex flex-col h-full bg-[#0c0d10] relative overflow-hidden bg-grid-pattern">
+      {/* Background Radial Glow */}
+      <div className="absolute inset-0 bg-glow-radial pointer-events-none" />
+
       {/* Top Header Bar */}
-      <header className="h-14 border-b border-kimi-border px-4 flex items-center justify-between bg-kimi-sidebar/40 backdrop-blur shrink-0 z-10">
+      <header className="h-14 border-b border-[#1e2230] px-4 flex items-center justify-between bg-[#101218]/80 backdrop-blur shrink-0 z-10">
         <div className="flex items-center gap-3">
           <button
             onClick={onOpenSidebar}
-            className="md:hidden text-gray-400 hover:text-white p-1.5 rounded-lg hover:bg-kimi-hover"
+            className="md:hidden text-gray-400 hover:text-white p-1.5 rounded-lg hover:bg-[#1a1e2b]"
           >
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Model Status (Clean & Minimal - Ling 3.0 Flash) */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-kimi-card border border-kimi-border/60 text-gray-200 text-xs font-medium shadow-sm">
-            <Zap className="w-3.5 h-3.5 text-amber-400 fill-current animate-pulse" />
-            <span>Ling 3.0 Flash</span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
-              Active
+          {/* Engine Status Badge */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#161922] border border-[#252b3c] text-gray-200 text-xs font-medium shadow-sm">
+            <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400 animate-pulse" />
+            <span className="font-mono text-purple-300 font-semibold">Ling Engine Pro</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+              Ready
             </span>
           </div>
         </div>
 
         {activeArtifact && (
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/60 border border-purple-500/30 text-purple-300 text-xs">
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/60 border border-purple-500/30 text-purple-300 text-xs font-mono">
             <Layout className="w-3.5 h-3.5 text-purple-400" />
-            <span className="truncate max-w-[150px]">{activeArtifact.title}</span>
+            <span className="truncate max-w-[180px]">{activeArtifact.title}</span>
           </div>
         )}
       </header>
@@ -105,43 +112,47 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       {/* Messages Scroll Viewport */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto custom-scrollbar scroll-smooth"
+        className="flex-1 overflow-y-auto custom-scrollbar scroll-smooth relative z-0"
       >
         {messages.length === 0 ? (
-          /* Welcome Screen */
-          <div className="h-full max-w-3xl mx-auto px-4 flex flex-col items-center justify-center text-center py-12">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 flex items-center justify-center shadow-xl shadow-purple-600/30 mb-6 animate-pulse">
-              <Bot className="w-9 h-9 text-white" />
+          /* High-End Studio Hero Screen (Vercel / Linear Style) */
+          <div className="h-full max-w-4xl mx-auto px-4 flex flex-col items-center justify-center text-center py-12">
+            {/* Top Product Badge */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#181b26] border border-purple-500/30 text-xs text-purple-300 font-medium mb-6 shadow-lg shadow-purple-900/20">
+              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+              <span>Rdir Studio Engine • Enterprise Web & Code Builder</span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight mb-3">
-              Apa yang ingin Anda buat hari ini dengan{' '}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-400">
-                RdirAI
-              </span>
-              ?
+            {/* Main Headline */}
+            <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight mb-4 leading-tight">
+              Wujudkan Aplikasi & Web Kelas Dunia
             </h1>
-            <p className="text-sm sm:text-base text-gray-400 max-w-xl mb-8">
-              Platform AI cepat & halus dengan dukungan{' '}
-              <strong className="text-purple-300 font-semibold">Live View Preview</strong> secara real-time.
+            <p className="text-sm sm:text-base text-gray-400 max-w-2xl mb-10 leading-relaxed">
+              Arsitektur pengembang otomatis untuk menghasilkan aplikasi web multi-file (HTML, CSS, JS, PHP, SVG) lengkap dengan{' '}
+              <strong className="text-purple-300 font-semibold">Live Preview Workspace</strong> instan.
             </p>
 
-            {/* Quick Prompt Suggestions */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-xl text-left">
+            {/* 4 Premium Workspace Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl text-left">
               <button
                 onClick={() =>
                   handleQuickPrompt(
                     'Buatkan saya halaman Dashboard Analytics menggunakan HTML, CSS, dan Tailwind dengan tampilan dark mode modern dan chart SVG interaktif.'
                   )
                 }
-                className="p-3.5 rounded-2xl bg-kimi-card border border-kimi-border hover:border-purple-500/50 hover:bg-kimi-hover transition-all group shadow-sm"
+                className="glass-card p-4 rounded-2xl transition-all duration-200 group text-left relative overflow-hidden"
               >
-                <div className="flex items-center gap-2 text-purple-400 text-xs font-semibold mb-1">
-                  <Layout className="w-4 h-4" />
-                  Live View Web App
+                <div className="flex items-center justify-between mb-2">
+                  <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                    <Layout className="w-4 h-4" />
+                  </div>
+                  <ArrowUpRight className="w-4 h-4 text-gray-600 group-hover:text-purple-400 transition-colors" />
                 </div>
-                <div className="text-xs text-gray-300 line-clamp-2">
-                  Buat Dashboard Analytics modern dengan Tailwind & Live Preview
+                <div className="text-sm font-bold text-gray-100 group-hover:text-purple-300 transition-colors mb-1">
+                  Fullstack Web Dashboard
+                </div>
+                <div className="text-xs text-gray-400 leading-relaxed">
+                  Rancang Dashboard Analytics modern dengan Tailwind CSS & Live Preview.
                 </div>
               </button>
 
@@ -151,14 +162,41 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     'Buatkan kode kalkulator interaktif lengkap dengan HTML, CSS, dan JavaScript yang langsung bisa dicoba di Live View.'
                   )
                 }
-                className="p-3.5 rounded-2xl bg-kimi-card border border-kimi-border hover:border-purple-500/50 hover:bg-kimi-hover transition-all group shadow-sm"
+                className="glass-card p-4 rounded-2xl transition-all duration-200 group text-left relative overflow-hidden"
               >
-                <div className="flex items-center gap-2 text-emerald-400 text-xs font-semibold mb-1">
-                  <Code className="w-4 h-4" />
-                  Kalkulator Interaktif
+                <div className="flex items-center justify-between mb-2">
+                  <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <Code className="w-4 h-4" />
+                  </div>
+                  <ArrowUpRight className="w-4 h-4 text-gray-600 group-hover:text-emerald-400 transition-colors" />
                 </div>
-                <div className="text-xs text-gray-300 line-clamp-2">
-                  Kode HTML/JS Widget kalkulator yang bisa langsung digunakan
+                <div className="text-sm font-bold text-gray-100 group-hover:text-emerald-300 transition-colors mb-1">
+                  Kalkulator / Widget JS
+                </div>
+                <div className="text-xs text-gray-400 leading-relaxed">
+                  Buat komponen interaktif JavaScript lengkap dengan logic & UI.
+                </div>
+              </button>
+
+              <button
+                onClick={() =>
+                  handleQuickPrompt(
+                    'Buatkan sistem modul PHP lengkap dengan koneksi database MySQL, fungsi CRUD, dan tampilan HTML responsif.'
+                  )
+                }
+                className="glass-card p-4 rounded-2xl transition-all duration-200 group text-left relative overflow-hidden"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                    <FileCode className="w-4 h-4" />
+                  </div>
+                  <ArrowUpRight className="w-4 h-4 text-gray-600 group-hover:text-indigo-400 transition-colors" />
+                </div>
+                <div className="text-sm font-bold text-gray-100 group-hover:text-indigo-300 transition-colors mb-1">
+                  PHP Backend & Engine
+                </div>
+                <div className="text-xs text-gray-400 leading-relaxed">
+                  Modul server-side PHP dengan query MySQL & arsitektur clean.
                 </div>
               </button>
 
@@ -168,31 +206,19 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     'Buatkan ilustrasi logo futuristik bertema AI dalam bentuk format SVG murni.'
                   )
                 }
-                className="p-3.5 rounded-2xl bg-kimi-card border border-kimi-border hover:border-purple-500/50 hover:bg-kimi-hover transition-all group shadow-sm"
+                className="glass-card p-4 rounded-2xl transition-all duration-200 group text-left relative overflow-hidden"
               >
-                <div className="flex items-center gap-2 text-pink-400 text-xs font-semibold mb-1">
-                  <Sparkles className="w-4 h-4" />
-                  Desain SVG Vector
+                <div className="flex items-center justify-between mb-2">
+                  <div className="p-2 rounded-xl bg-pink-500/10 text-pink-400 border border-pink-500/20">
+                    <Sparkles className="w-4 h-4" />
+                  </div>
+                  <ArrowUpRight className="w-4 h-4 text-gray-600 group-hover:text-pink-400 transition-colors" />
                 </div>
-                <div className="text-xs text-gray-300 line-clamp-2">
-                  Generate grafis vector SVG logo AI futuristik
+                <div className="text-sm font-bold text-gray-100 group-hover:text-pink-300 transition-colors mb-1">
+                  SVG Vector Graphic
                 </div>
-              </button>
-
-              <button
-                onClick={() =>
-                  handleQuickPrompt(
-                    'Jelaskan konsep arsitektur Microservices dan beri contoh penerapannya dalam Node.js.'
-                  )
-                }
-                className="p-3.5 rounded-2xl bg-kimi-card border border-kimi-border hover:border-purple-500/50 hover:bg-kimi-hover transition-all group shadow-sm"
-              >
-                <div className="flex items-center gap-2 text-amber-400 text-xs font-semibold mb-1">
-                  <Cpu className="w-4 h-4" />
-                  Penalaran & Analisis Kode
-                </div>
-                <div className="text-xs text-gray-300 line-clamp-2">
-                  Diskusi arsitektur software & praktik terbaik Node.js
+                <div className="text-xs text-gray-400 leading-relaxed">
+                  Generate aset ikon & ilustrasi vektor format SVG presisi tinggi.
                 </div>
               </button>
             </div>
@@ -208,14 +234,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             ))}
 
             {isLoading && (
-              <div className="py-5 px-4 md:px-6 bg-kimi-card/20 animate-pulse">
+              <div className="py-5 px-4 md:px-6 bg-[#12151f]/50 border-y border-[#1e2334]">
                 <div className="max-w-4xl mx-auto flex gap-4 items-center">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white">
-                    <Bot className="w-4 h-4 animate-spin" />
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-md shadow-purple-500/20">
+                    <Terminal className="w-4 h-4 animate-spin text-purple-200" />
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-purple-300 font-medium">
-                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-                    Menulis jawaban secara halus...
+                  <div className="flex items-center gap-2 text-xs text-purple-300 font-mono">
+                    <span className="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span>
+                    Membangun kode & memproses tahapan proyek...
                   </div>
                 </div>
               </div>
@@ -225,48 +251,72 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         )}
       </div>
 
-      {/* Input Box Area */}
-      <div className="p-3 md:p-4 bg-kimi-bg/90 backdrop-blur border-t border-kimi-border shrink-0">
+      {/* Luxury Glassmorphic Input Area */}
+      <div className="p-3 md:p-5 bg-[#0c0d10]/90 backdrop-blur border-t border-[#1e2230] shrink-0 z-10">
         <div className="max-w-4xl mx-auto relative">
-          <div className="relative flex items-center rounded-2xl bg-kimi-card border border-kimi-border focus-within:border-purple-500/60 shadow-xl transition-all">
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Tanyakan sesuatu atau minta buatkan web app HTML/JS (Shift+Enter untuk baris baru)..."
-              rows={1}
-              className="w-full py-3.5 pl-4 pr-12 bg-transparent text-sm text-gray-100 placeholder-gray-500 resize-none focus:outline-none max-h-32 min-h-[50px] custom-scrollbar"
-            />
+          <div className="relative flex flex-col rounded-2xl bg-[#141722] border border-[#242a3e] focus-within:border-purple-500/60 shadow-2xl transition-all">
+            {/* Quick Language Tag Selector Header */}
+            <div className="px-4 py-2 border-b border-[#1e2434] flex items-center justify-between text-[11px] text-gray-400 font-mono">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                  HTML5
+                </span>
+                <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">
+                  CSS3
+                </span>
+                <span className="px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-300 border border-yellow-500/20">
+                  JS
+                </span>
+                <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+                  PHP
+                </span>
+                <span className="px-2 py-0.5 rounded bg-pink-500/10 text-pink-300 border border-pink-500/20">
+                  SVG
+                </span>
+              </div>
+              <span className="hidden sm:inline text-gray-500">Press ↵ to send</span>
+            </div>
 
-            <div className="absolute right-2 bottom-2">
-              {isLoading ? (
-                <button
-                  onClick={onStopStream}
-                  className="p-2 rounded-xl bg-red-600 hover:bg-red-500 text-white transition-colors shadow-md"
-                  title="Hentikan Response"
-                >
-                  <Square className="w-4 h-4 fill-current" />
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    if (input.trim()) {
-                      onSendMessage(input);
-                      setInput('');
-                    }
-                  }}
-                  disabled={!input.trim()}
-                  className={`p-2 rounded-xl transition-all shadow-md ${
-                    input.trim()
-                      ? 'bg-purple-600 hover:bg-purple-500 text-white cursor-pointer'
-                      : 'bg-gray-800 text-gray-600 cursor-not-allowed'
-                  }`}
-                  title="Kirim Pesan"
-                >
-                  <Send className="w-4 h-4" />
-                </button>
-              )}
+            <div className="relative flex items-center">
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Deskripsikan web atau modul kode yang ingin Anda buat..."
+                rows={1}
+                className="w-full py-3.5 pl-4 pr-14 bg-transparent text-sm text-gray-100 placeholder-gray-500 resize-none focus:outline-none max-h-36 min-h-[52px] custom-scrollbar font-sans"
+              />
+
+              <div className="absolute right-3 bottom-2.5">
+                {isLoading ? (
+                  <button
+                    onClick={onStopStream}
+                    className="p-2 rounded-xl bg-red-600 hover:bg-red-500 text-white transition-colors shadow-lg"
+                    title="Hentikan Proses"
+                  >
+                    <Square className="w-4 h-4 fill-current" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (input.trim()) {
+                        onSendMessage(input);
+                        setInput('');
+                      }
+                    }}
+                    disabled={!input.trim()}
+                    className={`p-2.5 rounded-xl transition-all shadow-lg ${
+                      input.trim()
+                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white cursor-pointer shadow-purple-900/40 border border-purple-400/30'
+                        : 'bg-[#1e2230] text-gray-600 cursor-not-allowed border border-[#2a2f42]'
+                    }`}
+                    title="Kirim Instruksi"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
