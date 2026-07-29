@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { CodeArtifact } from '@/types/chat';
-import { Eye, Code2, Copy, Check, Maximize2, Minimize2, RefreshCw, X, Download, Sparkles } from 'lucide-react';
+import { Eye, Code2, Copy, Check, Maximize2, Minimize2, RefreshCw, X, Download, Sparkles, Terminal, FileCode } from 'lucide-react';
 
 interface LiveViewProps {
   artifact: CodeArtifact | null;
@@ -32,21 +32,44 @@ export const LiveView: React.FC<LiveViewProps> = ({ artifact, onClose }) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${artifact.title.toLowerCase().replace(/\s+/g, '-') || 'artifact'}.html`;
+    a.download = `${artifact.filename || artifact.title.toLowerCase().replace(/\s+/g, '-') || 'artifact'}.html`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
-  // Build sandboxed HTML template with Tailwind CSS CDN included by default for rich web app artifact preview
+  // Build sandboxed HTML template with isolation guarantees
   const generatePreviewHtml = (code: string, language: string) => {
-    if (language === 'svg') {
+    if (!code || !code.trim()) {
       return `
         <!DOCTYPE html>
         <html>
         <head>
+          <base href="about:blank">
           <style>
-            body { margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #0f0f11; }
-            svg { max-width: 90%; max-height: 90vh; }
+            body { margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background: #0b0f17; color: #94a3b8; font-family: system-ui, sans-serif; }
+            .card { text-align: center; p-6; background: #1e293b; border-radius: 1rem; border: 1px solid #334155; padding: 2rem; max-width: 320px; }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <h3 style="color: #f8fafc; margin-bottom: 0.5rem;">Live View Standby</h3>
+            <p style="font-size: 0.875rem;">Menyiapkan pratinjau kode...</p>
+          </div>
+        </body>
+        </html>
+      `;
+    }
+
+    // SVG Vector Graphics
+    if (language === 'svg' || code.trim().startsWith('<svg')) {
+      return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <base href="about:blank">
+          <style>
+            body { margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #0f172a; }
+            svg { max-width: 90%; max-height: 90vh; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5)); }
           </style>
         </head>
         <body>${code}</body>
@@ -54,7 +77,100 @@ export const LiveView: React.FC<LiveViewProps> = ({ artifact, onClose }) => {
       `;
     }
 
+    // PHP Script Handling - Render HTML markup or simulated PHP Output
+    if (language === 'php' || code.includes('<?php')) {
+      // Clean PHP tags for client-side HTML preview if pure HTML is contained inside
+      const strippedPhp = code
+        .replace(/<\?php[\s\S]*?\?>/g, '')
+        .replace(/<\?[\s\S]*?\?>/g, '')
+        .trim();
+
+      if (strippedPhp.length > 20) {
+        return `
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <base href="about:blank">
+            <meta charset="UTF-8">
+            <script src="https://cdn.tailwindcss.com"></script>
+            <style>body { font-family: sans-serif; background: #0f172a; color: #f8fafc; padding: 1rem; }</style>
+          </head>
+          <body>${strippedPhp}</body>
+          </html>
+        `;
+      }
+
+      return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <base href="about:blank">
+          <style>
+            body { margin: 0; padding: 1.5rem; background: #0f172a; color: #e2e8f0; font-family: monospace; }
+            .header { background: #1e293b; padding: 0.75rem 1rem; border-radius: 0.5rem; border: 1px solid #334155; margin-bottom: 1rem; color: #a78bfa; font-weight: bold; }
+            pre { background: #020617; padding: 1rem; border-radius: 0.5rem; border: 1px solid #1e293b; overflow-x: auto; color: #38bdf8; }
+          </style>
+        </head>
+        <body>
+          <div class="header">🐘 PHP Engine Simulation Mode</div>
+          <p style="font-size: 0.875rem; color: #94a3b8; font-family: sans-serif; margin-bottom: 1rem;">
+            Kode PHP siap dieksekusi di server web (Apache/Nginx/Laravel). Berikut kode sumbernya:
+          </p>
+          <pre><code>${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>
+        </body>
+        </html>
+      `;
+    }
+
+    // Pure JavaScript without HTML wrapper - wrap in interactive Console Runner
+    if (
+      (language === 'js' || language === 'javascript' || language === 'ts') &&
+      !code.includes('<html') &&
+      !code.includes('<div')
+    ) {
+      return `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <base href="about:blank">
+          <style>
+            body { margin: 0; padding: 1rem; background: #020617; color: #f8fafc; font-family: monospace; font-size: 0.875rem; }
+            .console-log { border-bottom: 1px solid #1e293b; padding: 0.5rem 0; color: #38bdf8; }
+            .console-err { color: #f87171; }
+          </style>
+        </head>
+        <body>
+          <div id="output"></div>
+          <script>
+            const output = document.getElementById('output');
+            const log = console.log;
+            console.log = function(...args) {
+              log(...args);
+              const div = document.createElement('div');
+              div.className = 'console-log';
+              div.textContent = '❯ ' + args.map(a => typeof a === 'object' ? JSON.stringify(a) : a).join(' ');
+              output.appendChild(div);
+            };
+            try {
+              ${code}
+            } catch(e) {
+              const div = document.createElement('div');
+              div.className = 'console-log console-err';
+              div.textContent = '❌ Error: ' + e.message;
+              output.appendChild(div);
+            }
+          </script>
+        </body>
+        </html>
+      `;
+    }
+
+    // Full HTML Document or Tailwind Web Page
     if (code.includes('<!DOCTYPE html>') || code.includes('<html')) {
+      // Inject base tag to prevent relative redirect loop to host app
+      if (!code.includes('<base')) {
+        return code.replace('<head>', '<head><base href="about:blank">');
+      }
       return code;
     }
 
@@ -62,6 +178,7 @@ export const LiveView: React.FC<LiveViewProps> = ({ artifact, onClose }) => {
       <!DOCTYPE html>
       <html lang="en">
       <head>
+        <base href="about:blank">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script src="https://cdn.tailwindcss.com"></script>
@@ -144,7 +261,7 @@ export const LiveView: React.FC<LiveViewProps> = ({ artifact, onClose }) => {
           <button
             onClick={handleDownload}
             className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-kimi-hover transition-colors"
-            title="Download Kode HTML"
+            title="Download Kode"
           >
             <Download className="w-4 h-4" />
           </button>
@@ -175,7 +292,7 @@ export const LiveView: React.FC<LiveViewProps> = ({ artifact, onClose }) => {
             title={artifact.title}
             srcDoc={generatePreviewHtml(artifact.code, artifact.language)}
             className="w-full h-full border-0 bg-slate-950"
-            sandbox="allow-scripts allow-modals allow-forms allow-popups"
+            sandbox="allow-scripts allow-modals allow-forms"
           />
         ) : (
           <div className="w-full h-full p-4 overflow-auto custom-scrollbar font-mono text-xs text-gray-200 bg-slate-950 leading-relaxed">

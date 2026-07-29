@@ -127,13 +127,16 @@ export default function Home() {
       const lang = match[1].toLowerCase();
       const filename = match[2] || `index.${lang === 'javascript' ? 'js' : lang}`;
       const code = match[3].trim();
-      return {
-        id: `artifact_${Date.now()}`,
-        title: filename ? `File: ${filename}` : `${lang.toUpperCase()} Preview`,
-        language: lang,
-        code,
-        filename,
-      };
+      
+      if (code.length >= 25) {
+        return {
+          id: `artifact_${Date.now()}`,
+          title: filename ? `File: ${filename}` : `${lang.toUpperCase()} Preview`,
+          language: lang,
+          code,
+          filename,
+        };
+      }
     }
     return null;
   };
