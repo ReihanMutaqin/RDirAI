@@ -33,18 +33,17 @@ export interface CodeArtifact {
 
 export const OPENROUTER_MODELS: ModelOption[] = [
   {
+    id: 'inclusionai/ling-3.0-flash:free',
+    name: 'Ling 3.0 Flash',
+    provider: 'Inclusion AI',
+    description: 'Sangat cepat, halus, & efisien untuk percakapan dan coding.',
+    badge: 'Default (Fastest)',
+  },
+  {
     id: 'nvidia/nemotron-3-ultra-550b-a55b:free',
     name: 'Nemotron-3 Ultra 550B',
     provider: 'NVIDIA',
     description: 'Model ultra-besar 550B untuk penalaran mendalam & analisis kompleks.',
-    badge: 'Recommended',
-  },
-  {
-    id: 'inclusionai/ling-3.0-flash:free',
-    name: 'Ling 3.0 Flash',
-    provider: 'Inclusion AI',
-    description: 'Sangat cepat & efisien untuk percakapan sehari-hari dan tanya jawab.',
-    badge: 'Fastest',
   },
   {
     id: 'nvidia/nemotron-3-super-120b-a12b:free',
@@ -57,6 +56,5 @@ export const OPENROUTER_MODELS: ModelOption[] = [
     name: 'North Mini Code',
     provider: 'Cohere',
     description: 'Dioptimalkan khusus untuk coding, sintaksis program, dan live preview.',
-    badge: 'Code Expert',
   },
 ];

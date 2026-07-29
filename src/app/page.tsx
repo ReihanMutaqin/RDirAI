@@ -11,7 +11,7 @@ export default function Home() {
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [selectedModel, setSelectedModel] = useState<string>(
-    process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'nvidia/nemotron-3-ultra-550b-a55b:free'
+    process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'inclusionai/ling-3.0-flash:free'
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -137,7 +137,6 @@ export default function Home() {
         signal: controller.signal,
       });
 
-      // Update active conversation ID from response header if creating new thread
       const returnedConvId = response.headers.get('X-Conversation-Id');
       if (returnedConvId && returnedConvId !== activeConvId) {
         setActiveConvId(returnedConvId);
@@ -151,6 +150,7 @@ export default function Home() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let accumulated = '';
+      let pendingAnimation: number | null = null;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -159,17 +159,20 @@ export default function Home() {
         const chunk = decoder.decode(value, { stream: true });
         accumulated += chunk;
 
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === assistantMsgId ? { ...m, content: accumulated } : m
-          )
-        );
+        // Smooth text rendering batching
+        if (pendingAnimation) cancelAnimationFrame(pendingAnimation);
+        pendingAnimation = requestAnimationFrame(() => {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMsgId ? { ...m, content: accumulated } : m
+            )
+          );
 
-        // Auto detect live preview artifact if user asked for code/app
-        const artifact = extractArtifactFromContent(accumulated);
-        if (artifact) {
-          setActiveArtifact(artifact);
-        }
+          const artifact = extractArtifactFromContent(accumulated);
+          if (artifact) {
+            setActiveArtifact(artifact);
+          }
+        });
       }
     } catch (err: any) {
       if (err.name !== 'AbortError') {

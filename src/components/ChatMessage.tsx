@@ -7,7 +7,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeKatex from 'rehype-katex';
-import { User, Bot, Copy, Check, Eye, Play, Sparkles } from 'lucide-react';
+import { User, Bot, Copy, Check, Play } from 'lucide-react';
 
 import 'katex/dist/katex.min.css';
 
@@ -28,7 +28,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onOpenArtifac
 
   return (
     <div
-      className={`py-5 px-4 md:px-6 transition-colors ${
+      className={`py-5 px-4 md:px-6 transition-all duration-200 ease-out ${
         isUser ? 'bg-transparent' : 'bg-kimi-card/40 border-y border-kimi-border/40'
       }`}
     >
@@ -54,11 +54,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onOpenArtifac
               <span className="text-xs font-semibold text-gray-200">
                 {isUser ? 'Anda' : 'RdirAI Assistant'}
               </span>
-              {message.model && !isUser && (
-                <span className="text-[10px] px-1.5 py-0.2 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">
-                  {message.model.split('/')[1] || message.model}
-                </span>
-              )}
             </div>
 
             <button
@@ -70,8 +65,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onOpenArtifac
             </button>
           </div>
 
-          {/* Markdown Content */}
-          <div className="prose prose-invert max-w-none text-sm leading-relaxed text-gray-200">
+          {/* Markdown Content with smooth text rendering */}
+          <div className="prose prose-invert max-w-none text-sm leading-relaxed text-gray-200 transition-opacity duration-150">
             <ReactMarkdown
               remarkPlugins={[remarkGfm, remarkMath]}
               rehypePlugins={[rehypeHighlight, rehypeKatex]}
@@ -89,7 +84,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onOpenArtifac
 
                   if (!inline && match) {
                     return (
-                      <div className="my-3 rounded-xl overflow-hidden border border-kimi-border bg-slate-950 shadow-lg">
+                      <div className="my-3 rounded-xl overflow-hidden border border-kimi-border bg-slate-950 shadow-lg transition-all duration-200">
                         {/* Code Block Header */}
                         <div className="flex items-center justify-between px-3 py-1.5 bg-slate-900 border-b border-kimi-border text-xs text-gray-400">
                           <span className="font-mono text-[11px] font-medium text-purple-300 uppercase">

@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Message, CodeArtifact } from '@/types/chat';
 import { ChatMessage } from './ChatMessage';
-import { ModelSelector } from './ModelSelector';
 import {
   Menu,
   Send,
@@ -13,8 +12,7 @@ import {
   Code,
   Layout,
   Cpu,
-  Layers,
-  ArrowRight,
+  Zap,
 } from 'lucide-react';
 
 interface ChatInterfaceProps {
@@ -33,7 +31,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   messages,
   isLoading,
   selectedModel,
-  onSelectModel,
   onSendMessage,
   onStopStream,
   onOpenSidebar,
@@ -42,14 +39,21 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 }) => {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // Smooth scroll to bottom during streaming
+  const scrollToBottomSmooth = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
+    scrollToBottomSmooth();
   }, [messages, isLoading]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -80,10 +84,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             <Menu className="w-5 h-5" />
           </button>
 
-          <ModelSelector
-            selectedModel={selectedModel}
-            onSelectModel={onSelectModel}
-          />
+          {/* Model Status (Clean & Minimal - Ling 3.0 Flash) */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-kimi-card border border-kimi-border/60 text-gray-200 text-xs font-medium shadow-sm">
+            <Zap className="w-3.5 h-3.5 text-amber-400 fill-current animate-pulse" />
+            <span>Ling 3.0 Flash</span>
+            <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">
+              Active
+            </span>
+          </div>
         </div>
 
         {activeArtifact && (
@@ -95,9 +103,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       </header>
 
       {/* Messages Scroll Viewport */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
+      <div
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto custom-scrollbar scroll-smooth"
+      >
         {messages.length === 0 ? (
-          /* Welcome Screen (Claude / Kimi style) */
+          /* Welcome Screen */
           <div className="h-full max-w-3xl mx-auto px-4 flex flex-col items-center justify-center text-center py-12">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-pink-500 flex items-center justify-center shadow-xl shadow-purple-600/30 mb-6 animate-pulse">
               <Bot className="w-9 h-9 text-white" />
@@ -111,7 +122,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               ?
             </h1>
             <p className="text-sm sm:text-base text-gray-400 max-w-xl mb-8">
-              Platform AI canggih berbasis OpenRouter dengan kemampuan penalaran mendalam dan{' '}
+              Platform AI cepat & halus dengan dukungan{' '}
               <strong className="text-purple-300 font-semibold">Live View Preview</strong> secara real-time.
             </p>
 
@@ -197,14 +208,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             ))}
 
             {isLoading && (
-              <div className="py-5 px-4 md:px-6 bg-kimi-card/20">
+              <div className="py-5 px-4 md:px-6 bg-kimi-card/20 animate-pulse">
                 <div className="max-w-4xl mx-auto flex gap-4 items-center">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white animate-pulse">
-                    <Bot className="w-4 h-4" />
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white">
+                    <Bot className="w-4 h-4 animate-spin" />
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-purple-300">
-                    <span className="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span>
-                    RdirAI sedang berpikir dan mengetik...
+                  <div className="flex items-center gap-2 text-xs text-purple-300 font-medium">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                    Menulis jawaban secara halus...
                   </div>
                 </div>
               </div>
@@ -215,7 +226,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       </div>
 
       {/* Input Box Area */}
-      <div className="p-3 md:p-4 bg-kimi-bg/80 backdrop-blur border-t border-kimi-border shrink-0">
+      <div className="p-3 md:p-4 bg-kimi-bg/90 backdrop-blur border-t border-kimi-border shrink-0">
         <div className="max-w-4xl mx-auto relative">
           <div className="relative flex items-center rounded-2xl bg-kimi-card border border-kimi-border focus-within:border-purple-500/60 shadow-xl transition-all">
             <textarea
@@ -257,11 +268,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 </button>
               )}
             </div>
-          </div>
-
-          <div className="mt-2 text-center text-[11px] text-gray-500 flex items-center justify-center gap-1.5">
-            <Sparkles className="w-3 h-3 text-purple-400" />
-            <span>RdirAI didukung oleh OpenRouter Free Models & Database TiDB Cloud</span>
           </div>
         </div>
       </div>
