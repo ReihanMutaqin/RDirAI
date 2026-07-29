@@ -36,18 +36,18 @@ export const FileCardWidget: React.FC<FileCardWidgetProps> = ({
   return (
     <div
       onClick={onPreview}
-      className="my-3 p-3.5 rounded-2xl bg-[#141724] hover:bg-[#191d2e] border border-[#24293c] hover:border-blue-500/40 transition-all cursor-pointer shadow-lg flex items-center justify-between group max-w-xl"
+      className="my-3 p-3.5 rounded-2xl bg-white hover:bg-gray-50/50 border border-gray-200 hover:border-blue-300 transition-all cursor-pointer shadow-sm flex items-center justify-between group max-w-xl"
     >
       <div className="flex items-center gap-3.5 min-w-0 flex-1">
-        <div className="w-10 h-10 rounded-xl bg-[#10121c] border border-[#202436] flex items-center justify-center shrink-0 shadow-inner">
+        <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center shrink-0">
           {getFileIcon()}
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="text-xs font-bold text-gray-100 truncate font-mono">
+          <div className="text-[13px] font-semibold text-gray-800 truncate font-mono">
             {isAllFilesFolder ? 'Semua file' : filename}
           </div>
-          <div className="text-[11px] text-gray-400 font-mono mt-0.5">
+          <div className="text-[11px] text-gray-500 font-mono mt-0.5">
             {isAllFilesFolder ? `Pratinjau dan unduh file (${fileCount} file)` : `Pratinjau (${sizeKb} KB)`}
           </div>
         </div>
@@ -58,7 +58,7 @@ export const FileCardWidget: React.FC<FileCardWidgetProps> = ({
           e.stopPropagation();
           onPreview();
         }}
-        className="ml-3 px-3.5 py-1.5 rounded-xl bg-[#1f2436] hover:bg-blue-600 group-hover:bg-blue-600 text-gray-200 group-hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all border border-[#2c334d] group-hover:border-blue-400/40 shadow-sm shrink-0"
+        className="ml-3 px-3.5 py-1.5 rounded-xl bg-white group-hover:bg-blue-50 text-gray-600 group-hover:text-blue-600 text-xs font-semibold flex items-center gap-1.5 transition-all border border-gray-200 group-hover:border-blue-200 shadow-sm shrink-0"
       >
         <Eye className="w-3.5 h-3.5" />
         <span>Pratinjau</span>

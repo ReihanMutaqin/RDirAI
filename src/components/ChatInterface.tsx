@@ -174,7 +174,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#0b0c10] relative overflow-hidden bg-grid-pattern">
+    <div className="flex-1 flex flex-col h-full bg-[#f8f9fa] relative overflow-hidden bg-grid-pattern-light">
       {/* Kimi-style Right Drawer for "Semua File" */}
       <AllFilesDrawer
         isOpen={isAllFilesDrawerOpen}
@@ -211,24 +211,24 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       )}
 
       {/* Top Header Bar */}
-      <header className="h-14 border-b border-[#1e2332] px-4 flex items-center justify-between bg-[#121520]/90 backdrop-blur shrink-0 z-10">
+      <header className="h-14 border-b border-gray-200 px-4 flex items-center justify-between bg-white/90 backdrop-blur shrink-0 z-10">
         <div className="flex items-center gap-3">
           <button
             onClick={onOpenSidebar}
-            className="md:hidden text-gray-400 hover:text-white p-1.5 rounded-lg hover:bg-[#1a1f30]"
+            className="md:hidden text-gray-500 hover:text-gray-800 p-1.5 rounded-lg hover:bg-gray-100"
           >
             <Menu className="w-5 h-5" />
           </button>
 
           {/* Prominent Real-time Status Badge */}
           {isLoading ? (
-            <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-blue-950/80 border border-blue-500/50 text-blue-200 text-xs font-medium shadow-md shadow-blue-950/40 animate-pulse">
-              <Loader2 className="w-3.5 h-3.5 text-blue-400 animate-spin" />
+            <div className="flex items-center gap-2 px-3 py-1 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-medium shadow-sm animate-pulse">
+              <Loader2 className="w-3.5 h-3.5 text-blue-600 animate-spin" />
               <span className="font-semibold font-mono">SEDANG MEMPROSES... ({elapsedSeconds}s)</span>
             </div>
           ) : (
-            <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-[#181c2a] border border-[#262c3e] text-gray-400 text-xs font-mono">
-              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-gray-50 border border-gray-200 text-gray-500 text-xs font-mono">
+              <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
               <span>System Ready</span>
             </div>
           )}
@@ -237,8 +237,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         {/* Right Header Action Icons (Kimi-style "Semua file" button) */}
         <div className="flex items-center gap-3">
           {activeArtifact && (
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-blue-950/60 border border-blue-500/30 text-blue-300 text-xs font-mono">
-              <Layout className="w-3.5 h-3.5 text-blue-400" />
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-mono">
+              <Layout className="w-3.5 h-3.5 text-blue-600" />
               <span className="truncate max-w-[180px]">{activeArtifact.title}</span>
             </div>
           )}
@@ -247,14 +247,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             onClick={() => setIsAllFilesDrawerOpen(!isAllFilesDrawerOpen)}
             className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-2 transition-all shadow-sm ${
               isAllFilesDrawerOpen
-                ? 'bg-blue-600 border-blue-400 text-white shadow-blue-900/40'
-                : 'bg-[#181c2a] hover:bg-[#202538] border-[#282e44] text-gray-200 hover:text-white'
+                ? 'bg-blue-600 border-blue-600 text-white shadow-blue-200'
+                : 'bg-white hover:bg-gray-50 border-gray-200 text-gray-700 hover:text-gray-900'
             }`}
             title="Buka Panel Semua File"
           >
-            <Folder className="w-3.5 h-3.5 text-amber-400" />
+            <Folder className="w-3.5 h-3.5 text-amber-500" />
             <span className="font-sans">Semua file</span>
-            <span className="px-1.5 py-0.2 rounded-md bg-[#10131f] text-blue-300 font-mono text-[10px]">
+            <span className={`px-1.5 py-0.2 rounded-md font-mono text-[10px] ${isAllFilesDrawerOpen ? 'bg-blue-700 text-white' : 'bg-gray-100 text-blue-600'}`}>
               {generatedFiles.length}
             </span>
           </button>
@@ -269,17 +269,17 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
         {messages.length === 0 ? (
           /* High-End Studio Hero Screen */
           <div className="h-full max-w-4xl mx-auto px-4 flex flex-col items-center justify-center text-center py-12">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#161a26] border border-blue-500/30 text-xs text-blue-300 font-medium mb-6 shadow-lg shadow-blue-950/20">
-              <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-xs text-blue-700 font-medium mb-6 shadow-sm">
+              <Sparkles className="w-3.5 h-3.5 text-blue-500" />
               <span>Rdir Studio Engine • Development Workspace</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl font-black text-white tracking-tight mb-4 leading-tight">
+            <h1 className="text-4xl sm:text-5xl font-black text-gray-900 tracking-tight mb-4 leading-tight">
               Wujudkan Aplikasi & Web Kelas Dunia
             </h1>
-            <p className="text-sm sm:text-base text-gray-400 max-w-2xl mb-10 leading-relaxed">
+            <p className="text-sm sm:text-base text-gray-500 max-w-2xl mb-10 leading-relaxed">
               Arsitektur pengembang otomatis untuk menghasilkan aplikasi web multi-file (HTML, CSS, JS, PHP, SVG) lengkap dengan{' '}
-              <strong className="text-blue-300 font-semibold">Live Preview Workspace</strong> & analisis file hingga 50 MB.
+              <strong className="text-blue-600 font-semibold">Live Preview Workspace</strong> & analisis file hingga 50 MB.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl text-left">
@@ -289,18 +289,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     'Buatkan saya halaman Dashboard Analytics menggunakan HTML, CSS, dan Tailwind dengan tampilan dark mode modern dan chart SVG interaktif.'
                   )
                 }
-                className="glass-card p-4 rounded-2xl transition-all duration-200 group text-left relative overflow-hidden"
+                className="bg-white border border-gray-200 hover:border-blue-300 hover:shadow-md p-4 rounded-2xl transition-all duration-200 group text-left relative overflow-hidden"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                  <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
                     <Layout className="w-4 h-4" />
                   </div>
-                  <ArrowUpRight className="w-4 h-4 text-gray-600 group-hover:text-blue-400 transition-colors" />
+                  <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
                 </div>
-                <div className="text-sm font-bold text-gray-100 group-hover:text-blue-300 transition-colors mb-1">
+                <div className="text-sm font-bold text-gray-800 group-hover:text-blue-600 transition-colors mb-1">
                   Fullstack Web Dashboard
                 </div>
-                <div className="text-xs text-gray-400 leading-relaxed">
+                <div className="text-xs text-gray-500 leading-relaxed">
                   Rancang Dashboard Analytics modern dengan Tailwind CSS & Live Preview.
                 </div>
               </button>
@@ -311,18 +311,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     'Buatkan kode kalkulator interaktif lengkap dengan HTML, CSS, dan JavaScript yang langsung bisa dicoba di Live View.'
                   )
                 }
-                className="glass-card p-4 rounded-2xl transition-all duration-200 group text-left relative overflow-hidden"
+                className="bg-white border border-gray-200 hover:border-emerald-300 hover:shadow-md p-4 rounded-2xl transition-all duration-200 group text-left relative overflow-hidden"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
                     <Code className="w-4 h-4" />
                   </div>
-                  <ArrowUpRight className="w-4 h-4 text-gray-600 group-hover:text-emerald-400 transition-colors" />
+                  <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-emerald-500 transition-colors" />
                 </div>
-                <div className="text-sm font-bold text-gray-100 group-hover:text-emerald-300 transition-colors mb-1">
+                <div className="text-sm font-bold text-gray-800 group-hover:text-emerald-600 transition-colors mb-1">
                   Kalkulator / Widget JS
                 </div>
-                <div className="text-xs text-gray-400 leading-relaxed">
+                <div className="text-xs text-gray-500 leading-relaxed">
                   Buat komponen interaktif JavaScript lengkap dengan logic & UI.
                 </div>
               </button>
@@ -333,18 +333,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     'Buatkan sistem modul PHP lengkap dengan koneksi database MySQL, fungsi CRUD, dan tampilan HTML responsif.'
                   )
                 }
-                className="glass-card p-4 rounded-2xl transition-all duration-200 group text-left relative overflow-hidden"
+                className="bg-white border border-gray-200 hover:border-indigo-300 hover:shadow-md p-4 rounded-2xl transition-all duration-200 group text-left relative overflow-hidden"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                  <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
                     <FileCode className="w-4 h-4" />
                   </div>
-                  <ArrowUpRight className="w-4 h-4 text-gray-600 group-hover:text-indigo-400 transition-colors" />
+                  <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-indigo-500 transition-colors" />
                 </div>
-                <div className="text-sm font-bold text-gray-100 group-hover:text-indigo-300 transition-colors mb-1">
+                <div className="text-sm font-bold text-gray-800 group-hover:text-indigo-600 transition-colors mb-1">
                   PHP Backend & Engine
                 </div>
-                <div className="text-xs text-gray-400 leading-relaxed">
+                <div className="text-xs text-gray-500 leading-relaxed">
                   Modul server-side PHP dengan query MySQL & arsitektur clean.
                 </div>
               </button>
@@ -355,18 +355,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     'Buatkan ilustrasi logo futuristik bertema AI dalam bentuk format SVG murni.'
                   )
                 }
-                className="glass-card p-4 rounded-2xl transition-all duration-200 group text-left relative overflow-hidden"
+                className="bg-white border border-gray-200 hover:border-cyan-300 hover:shadow-md p-4 rounded-2xl transition-all duration-200 group text-left relative overflow-hidden"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                  <div className="p-2 rounded-xl bg-cyan-50 text-cyan-600 border border-cyan-100">
                     <Sparkles className="w-4 h-4" />
                   </div>
-                  <ArrowUpRight className="w-4 h-4 text-gray-600 group-hover:text-cyan-300 transition-colors" />
+                  <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-cyan-500 transition-colors" />
                 </div>
-                <div className="text-sm font-bold text-gray-100 group-hover:text-cyan-300 transition-colors mb-1">
+                <div className="text-sm font-bold text-gray-800 group-hover:text-cyan-600 transition-colors mb-1">
                   SVG Vector Graphic
                 </div>
-                <div className="text-xs text-gray-400 leading-relaxed">
+                <div className="text-xs text-gray-500 leading-relaxed">
                   Generate aset ikon & ilustrasi vektor format SVG presisi tinggi.
                 </div>
               </button>
@@ -390,19 +390,19 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
             {/* High Visibility Animated Processing Card with Embedded Phase Execution Tracker */}
             {isLoading && (
-              <div className="py-5 px-4 md:px-6 bg-[#141826]/90 border-y border-blue-500/40 shadow-2xl">
+              <div className="py-5 px-4 md:px-6 bg-white/90 border-y border-blue-100 shadow-sm">
                 <div className="max-w-4xl mx-auto space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-900/40">
+                      <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm border border-blue-100">
                         <Loader2 className="w-5 h-5 animate-spin" />
                       </div>
                       <div>
-                        <div className="text-xs font-bold text-blue-200 flex items-center gap-2 font-mono">
-                          <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping"></span>
+                        <div className="text-xs font-bold text-blue-700 flex items-center gap-2 font-mono">
+                          <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping"></span>
                           PROSES ENGINE SEDANG BERJALAN ({elapsedSeconds} detik)
                         </div>
-                        <div className="text-[11px] text-gray-400 mt-0.5">
+                        <div className="text-[11px] text-gray-500 mt-0.5">
                           Menyusun arsitektur file workspace & menulis kode secara real-time...
                         </div>
                       </div>
@@ -410,10 +410,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
                     <button
                       onClick={onStopStream}
-                      className="px-3 py-1.5 rounded-xl bg-red-950/80 hover:bg-red-900 border border-red-500/40 text-red-200 text-xs font-medium flex items-center gap-1.5 transition-colors shadow-sm shrink-0"
+                      className="px-3 py-1.5 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 text-xs font-medium flex items-center gap-1.5 transition-colors shadow-sm shrink-0"
                     >
-                      <Square className="w-3.5 h-3.5 fill-current" />
-                      Batalkan
+                      <Square className="w-3.5 h-3.5 text-gray-500" />
+                      Stop generating
                     </button>
                   </div>
 
@@ -430,39 +430,39 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       </div>
 
       {/* Input Area */}
-      <div className="p-3 md:p-5 bg-[#0b0c10]/90 backdrop-blur border-t border-[#1e2332] shrink-0 z-10">
+      <div className="p-3 md:p-5 bg-white/90 backdrop-blur border-t border-gray-200 shrink-0 z-10">
         <div className="max-w-4xl mx-auto relative">
           {/* Error Message Toast */}
           {errorMessage && (
-            <div className="mb-3 p-3 rounded-xl bg-red-950/80 border border-red-500/40 text-red-200 text-xs flex items-center justify-between animate-in fade-in duration-200">
+            <div className="mb-3 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center justify-between animate-in fade-in duration-200">
               <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
                 <span>{errorMessage}</span>
               </div>
               <button
                 onClick={() => setErrorMessage(null)}
-                className="text-red-400 hover:text-white"
+                className="text-red-400 hover:text-red-600"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
           )}
 
-          <div className="relative flex flex-col rounded-2xl bg-[#141724] border border-[#222738] focus-within:border-blue-500/60 shadow-2xl transition-all">
+          <div className="relative flex flex-col rounded-2xl bg-white border border-gray-300 focus-within:border-blue-400 focus-within:ring-1 focus-within:ring-blue-400 shadow-sm transition-all">
             {/* Attached Files Chips Bar */}
             {attachments.length > 0 && (
-              <div className="px-4 py-2 border-b border-[#1e2332] flex flex-wrap gap-2">
+              <div className="px-4 py-2 border-b border-gray-100 flex flex-wrap gap-2">
                 {attachments.map((file) => (
                   <div
                     key={file.id}
-                    className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#1a1f30] border border-[#282f44] text-xs text-gray-200 shadow-sm"
+                    className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-700 shadow-sm"
                   >
-                    <FileText className="w-3.5 h-3.5 text-blue-400" />
+                    <FileText className="w-3.5 h-3.5 text-blue-500" />
                     <span className="truncate max-w-[150px] font-mono text-[11px]">{file.name}</span>
                     <span className="text-[10px] text-gray-400 font-mono">({formatFileSize(file.size)})</span>
                     <button
                       onClick={() => removeAttachment(file.id)}
-                      className="p-0.5 text-gray-400 hover:text-red-400 transition-colors"
+                      className="p-0.5 text-gray-400 hover:text-red-500 transition-colors"
                       title="Hapus file"
                     >
                       <X className="w-3.5 h-3.5" />
@@ -473,21 +473,21 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             )}
 
             {/* Quick Language Selector Header */}
-            <div className="px-4 py-2 border-b border-[#1e2332] flex items-center justify-between text-[11px] text-gray-400 font-mono">
+            <div className="px-4 py-2 border-b border-gray-100 flex items-center justify-between text-[11px] text-gray-500 font-mono bg-gray-50/50 rounded-t-2xl">
               <div className="flex items-center gap-2">
-                <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">
+                <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-100">
                   HTML5
                 </span>
-                <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
+                <span className="px-2 py-0.5 rounded bg-cyan-50 text-cyan-600 border border-cyan-100">
                   CSS3
                 </span>
-                <span className="px-2 py-0.5 rounded bg-yellow-500/10 text-yellow-300 border border-yellow-500/20">
+                <span className="px-2 py-0.5 rounded bg-yellow-50 text-yellow-600 border border-yellow-100">
                   JS
                 </span>
-                <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+                <span className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-100">
                   PHP
                 </span>
-                <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100">
                   SVG
                 </span>
               </div>
@@ -495,9 +495,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               {!isLoading && messages.length > 0 && lastMessage && lastMessage.role === 'assistant' && (
                 <button
                   onClick={onContinueGeneration}
-                  className="text-cyan-300 hover:text-white flex items-center gap-1 font-semibold hover:underline"
+                  className="text-cyan-600 hover:text-cyan-700 flex items-center gap-1 font-semibold hover:underline"
                 >
-                  <PlayCircle className="w-3.5 h-3.5 text-cyan-400 fill-cyan-400/20" />
+                  <PlayCircle className="w-3.5 h-3.5 text-cyan-600 fill-cyan-100" />
                   <span>▶ Lanjutkan Kode</span>
                 </button>
               )}
@@ -507,10 +507,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
               {/* Paperclip File Upload Trigger */}
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="p-3 text-gray-400 hover:text-blue-300 transition-colors"
+                className="p-3 text-gray-400 hover:text-gray-700 transition-colors"
                 title="Upload File (Maksimal 50 MB)"
               >
-                <Paperclip className="w-4 h-4" />
+                <Paperclip className="w-5 h-5" />
               </button>
 
               <textarea
@@ -518,16 +518,16 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Deskripsikan web/modul kode atau lampirkan file (Maks 50MB)..."
+                placeholder="Ask anything, @ models / prompts"
                 rows={1}
-                className="w-full py-3.5 pl-1 pr-14 bg-transparent text-sm text-gray-100 placeholder-gray-500 resize-none focus:outline-none max-h-36 min-h-[52px] custom-scrollbar font-sans"
+                className="w-full py-4 pl-1 pr-14 bg-transparent text-sm text-gray-800 placeholder-gray-400 resize-none focus:outline-none max-h-36 min-h-[56px] custom-scrollbar font-sans"
               />
 
               <div className="absolute right-3 bottom-2.5">
                 {isLoading ? (
                   <button
                     onClick={onStopStream}
-                    className="p-2 rounded-xl bg-red-600 hover:bg-red-500 text-white transition-colors shadow-lg flex items-center gap-1 text-xs font-medium"
+                    className="p-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors shadow-sm flex items-center gap-1 text-xs font-medium"
                     title="Hentikan Proses"
                   >
                     <Square className="w-4 h-4 fill-current" />
@@ -536,10 +536,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   <button
                     onClick={handleSend}
                     disabled={!input.trim() && attachments.length === 0}
-                    className={`p-2.5 rounded-xl transition-all shadow-lg ${
+                    className={`p-2.5 rounded-xl transition-all shadow-sm ${
                       input.trim() || attachments.length > 0
-                        ? 'bg-blue-600 hover:bg-blue-500 text-white cursor-pointer shadow-blue-900/30 border border-blue-400/30'
-                        : 'bg-[#1b1f2c] text-gray-600 cursor-not-allowed border border-[#252b3c]'
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer shadow-md'
+                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     }`}
                     title="Kirim Instruksi"
                   >

@@ -112,20 +112,20 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   return (
     <div
       className={`py-5 px-4 md:px-6 transition-all duration-200 ease-out ${
-        isUser ? 'bg-transparent' : 'bg-[#141724]/50 border-y border-[#202536]'
+        isUser ? 'bg-transparent' : 'bg-white border-y border-gray-100'
       }`}
     >
       <div className="max-w-4xl mx-auto flex gap-4">
         {/* Avatar */}
-        <div className="shrink-0">
+        <div className="shrink-0 mt-1">
           {isUser ? (
-            <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-900/30 border border-blue-400/30">
+            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 shadow-sm border border-gray-300">
               <User className="w-4 h-4" />
             </div>
           ) : (
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 p-0.5 shadow-md shadow-blue-900/20">
-              <div className="w-full h-full bg-[#10121a] rounded-[10px] flex items-center justify-center">
-                <Terminal className="w-4 h-4 text-blue-300" />
+            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-sm shadow-blue-200">
+              <div className="w-full h-full flex items-center justify-center">
+                <Terminal className="w-4 h-4 text-white" />
               </div>
             </div>
           )}
@@ -136,17 +136,17 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
           {/* Header Info */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-gray-200 tracking-tight">
-                {isUser ? 'Anda' : 'Rdir Studio Engineer'}
+              <span className="text-[13px] font-bold text-gray-800 tracking-tight">
+                {isUser ? 'Anda' : 'Kimi'}
               </span>
             </div>
 
             <button
               onClick={handleCopyMessage}
-              className="text-gray-500 hover:text-gray-300 p-1 rounded hover:bg-[#1a1f30] transition-colors"
+              className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition-colors"
               title="Salin Teks"
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
           </div>
 
@@ -156,12 +156,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               {message.attachments.map((file) => (
                 <div
                   key={file.id}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#181c2a] border border-[#262c40] text-xs text-gray-200 shadow-sm"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-700 shadow-sm"
                 >
                   {getFileIcon(file)}
                   <div className="flex flex-col min-w-0 max-w-[220px]">
                     <span className="truncate font-mono font-medium">{file.name}</span>
-                    <span className="text-[10px] text-gray-400 font-mono">
+                    <span className="text-[10px] text-gray-500 font-mono">
                       {formatFileSize(file.size)}
                     </span>
                   </div>
@@ -176,11 +176,14 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
           )}
 
           {/* Markdown Content */}
-          <div className="prose prose-invert max-w-none text-sm leading-relaxed text-gray-200 transition-opacity duration-150">
+          <div className="prose max-w-none text-sm leading-relaxed text-gray-700 transition-opacity duration-150">
             <ReactMarkdown
               remarkPlugins={[remarkGfm, remarkMath]}
               rehypePlugins={[rehypeHighlight, rehypeKatex]}
               components={{
+                h3: ({node, ...props}: any) => <h3 className="text-[15px] font-semibold text-gray-800 mt-6 mb-2" {...props} />,
+                h4: ({node, ...props}: any) => <h4 className="text-[14px] font-semibold text-gray-700 mt-5 mb-2" {...props} />,
+                p: ({node, ...props}: any) => <p className="text-gray-600 leading-relaxed mb-4" {...props} />,
                 code({ node, inline, className, children, ...props }: any) {
                   const match = /language-(\w+)/.exec(className || '');
                   const codeText = String(children).replace(/\n$/, '');
@@ -195,10 +198,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 
                   if (!inline && match) {
                     return (
-                      <div className="my-3 rounded-xl overflow-hidden border border-[#222738] bg-[#090b10] shadow-xl transition-all duration-200">
+                      <div className="my-3 rounded-xl overflow-hidden border border-gray-200 bg-[#1e1e24] shadow-sm transition-all duration-200">
                         {/* Code Block Header */}
-                        <div className="flex items-center justify-between px-3 py-1.5 bg-[#121520] border-b border-[#202536] text-xs text-gray-400">
-                          <span className="font-mono text-[11px] font-semibold text-blue-300 uppercase tracking-wider">
+                        <div className="flex items-center justify-between px-3 py-1.5 bg-[#282c34] border-b border-[#3e4451] text-xs text-gray-400">
+                          <span className="font-mono text-[11px] font-semibold text-gray-300 uppercase tracking-wider">
                             {lang}
                           </span>
 
@@ -213,7 +216,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                     code: codeText,
                                   })
                                 }
-                                className="px-2.5 py-0.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-medium flex items-center gap-1 transition-all shadow-md shadow-blue-950/30 border border-blue-400/30"
+                                className="px-2.5 py-0.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-medium flex items-center gap-1 transition-all shadow-sm"
                               >
                                 <Play className="w-3 h-3 fill-current" />
                                 Live View
@@ -231,7 +234,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                         </div>
 
                         {/* Code Content */}
-                        <pre className="p-3 overflow-x-auto text-xs font-mono text-gray-200 leading-relaxed">
+                        <pre className="p-3 overflow-x-auto text-[13px] font-mono text-gray-200 leading-relaxed">
                           <code>{children}</code>
                         </pre>
                       </div>
@@ -239,7 +242,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                   }
 
                   return (
-                    <code className="bg-[#1a1e2c] text-blue-300 px-1.5 py-0.5 rounded text-xs font-mono border border-blue-500/20" {...props}>
+                    <code className="bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded text-[13px] font-mono border border-gray-200" {...props}>
                       {children}
                     </code>
                   );

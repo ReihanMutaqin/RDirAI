@@ -269,69 +269,39 @@ export const LiveView: React.FC<LiveViewProps> = ({ artifact, allFiles = [], onC
 
   return (
     <div
-      className={`bg-[#0f1117] border-l border-[#1e2332] flex flex-col transition-all duration-300 z-20 ${
+      className={`bg-gray-50 border-l border-gray-200 p-2 lg:p-4 flex flex-col transition-all duration-300 z-20 ${
         isFullscreen
-          ? 'fixed inset-0 z-50 w-screen h-screen'
+          ? 'fixed inset-0 z-50 w-screen h-screen p-0'
           : 'w-full md:w-[50vw] lg:w-[45vw] h-full'
       }`}
     >
-      {/* Header Bar */}
-      <div className="h-14 border-b border-[#1e2332] px-4 flex items-center justify-between bg-[#121520] shrink-0">
+      <div className="flex-1 flex flex-col rounded-xl overflow-hidden bg-[#1e1e24] shadow-xl border border-gray-800/50">
+        {/* Header Bar */}
+        <div className="h-14 border-b border-[#2d2d3d] px-4 flex items-center justify-between bg-[#1e1e24] shrink-0">
         <div className="flex items-center gap-2 min-w-0">
           <div className="p-1.5 rounded-lg bg-blue-500/20 text-blue-400">
-            <Sparkles className="w-4 h-4" />
+            <FileCode className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <h2 className="text-xs font-bold text-gray-100 truncate font-mono">
-              {artifact.filename || artifact.title}
+            <h2 className="text-[13px] font-semibold text-gray-200 truncate font-mono">
+              {artifact.title || artifact.filename}
             </h2>
-            <p className="text-[10px] text-blue-400 font-mono flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              Live Preview Mode
-            </p>
           </div>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-1.5">
-          {/* Mode Switcher Tabs */}
-          <div className="flex bg-[#181c2a] p-1 rounded-xl border border-[#262c3e]">
-            <button
-              onClick={() => setActiveTab('preview')}
-              className={`px-3 py-1 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors ${
-                activeTab === 'preview'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200'
-              }`}
-            >
-              <Eye className="w-3.5 h-3.5" />
-              Preview
-            </button>
-
-            <button
-              onClick={() => setActiveTab('code')}
-              className={`px-3 py-1 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors ${
-                activeTab === 'code'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200'
-              }`}
-            >
-              <Code2 className="w-3.5 h-3.5" />
-              Kode
-            </button>
+        <div className="flex items-center gap-1">
+          {/* Mode Switcher Tabs -> Dropdown Style */}
+          <div className="flex items-center bg-[#2d2d3d] hover:bg-[#3d3d4d] rounded-lg px-3 py-1.5 text-xs font-medium text-gray-300 mr-2 cursor-pointer transition-colors">
+            <span onClick={() => setActiveTab(activeTab === 'preview' ? 'code' : 'preview')} className="flex items-center gap-1">
+               {activeTab === 'preview' ? 'Preview' : 'Code'}
+               <svg className="w-3.5 h-3.5 ml-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            </span>
           </div>
 
           <button
-            onClick={() => setIframeKey((prev) => prev + 1)}
-            className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-[#1f2436] transition-colors"
-            title="Refresh Live View"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
-
-          <button
             onClick={handleCopy}
-            className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-[#1f2436] transition-colors"
+            className="p-2 text-gray-400 hover:text-white rounded-lg transition-colors"
             title="Salin Kode"
           >
             {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -339,10 +309,15 @@ export const LiveView: React.FC<LiveViewProps> = ({ artifact, allFiles = [], onC
 
           <button
             onClick={handleDownload}
-            className="p-1.5 text-gray-400 hover:text-white rounded-lg hover:bg-[#1f2436] transition-colors"
+            className="p-2 text-gray-400 hover:text-white rounded-lg transition-colors"
             title="Unduh File"
           >
             <Download className="w-4 h-4" />
+          </button>
+
+          {/* Publish Button */}
+          <button className="ml-1 px-4 py-1.5 rounded-lg bg-[#a855f7] hover:bg-[#9333ea] text-white text-xs font-semibold shadow-sm transition-colors">
+             Publish
           </button>
 
           <button
@@ -364,22 +339,23 @@ export const LiveView: React.FC<LiveViewProps> = ({ artifact, allFiles = [], onC
       </div>
 
       {/* Content Body */}
-      <div className="flex-1 overflow-hidden relative bg-[#0b0c10]">
+      <div className="flex-1 overflow-hidden relative bg-[#1e1e24]">
         {activeTab === 'preview' ? (
           <iframe
             key={iframeKey}
             srcDoc={previewHtml}
-            className="w-full h-full border-0 bg-[#0b0c10]"
+            className="w-full h-full border-0 bg-white"
             sandbox="allow-scripts allow-modals allow-same-origin allow-forms"
             title="Live Preview Output"
           />
         ) : (
-          <div className="h-full overflow-y-auto p-4 font-mono text-xs text-gray-200 bg-[#090b10] custom-scrollbar">
+          <div className="h-full overflow-y-auto p-4 font-mono text-[13px] text-gray-300 bg-[#1e1e24] custom-scrollbar">
             <pre>
               <code>{artifact.code}</code>
             </pre>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

@@ -363,7 +363,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-kimi-bg">
+    <div className="flex h-screen w-screen overflow-hidden bg-gray-50">
       {/* Auth Modal for Login & Register */}
       <AuthModal
         isOpen={isAuthOpen}
