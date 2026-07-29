@@ -21,6 +21,7 @@ import {
   FileText,
   AlertCircle,
   Loader2,
+  PlayCircle,
 } from 'lucide-react';
 
 interface ChatInterfaceProps {
@@ -29,6 +30,7 @@ interface ChatInterfaceProps {
   selectedModel: string;
   onSelectModel: (modelId: string) => void;
   onSendMessage: (text: string, attachments?: AttachedFile[]) => void;
+  onContinueGeneration: () => void;
   onStopStream: () => void;
   onOpenSidebar: () => void;
   onOpenArtifact: (artifact: CodeArtifact) => void;
@@ -42,6 +44,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   isLoading,
   selectedModel,
   onSendMessage,
+  onContinueGeneration,
   onStopStream,
   onOpenSidebar,
   onOpenArtifact,
@@ -333,13 +336,18 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
           </div>
         ) : (
           <div className="divide-y divide-transparent pb-6">
-            {messages.map((msg) => (
-              <ChatMessage
-                key={msg.id}
-                message={msg}
-                onOpenArtifact={onOpenArtifact}
-              />
-            ))}
+            {messages.map((msg, index) => {
+              const isLastAssistant = index === messages.length - 1 && msg.role === 'assistant';
+              return (
+                <ChatMessage
+                  key={msg.id}
+                  message={msg}
+                  isLastAssistant={isLastAssistant}
+                  onOpenArtifact={onOpenArtifact}
+                  onContinueGeneration={onContinueGeneration}
+                />
+              );
+            })}
 
             {/* High Visibility Animated Processing Card with Embedded Phase Execution Tracker */}
             {isLoading && (
@@ -444,7 +452,16 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   SVG
                 </span>
               </div>
-              <span className="hidden sm:inline text-gray-500">Maks. 50 MB per File</span>
+
+              {!isLoading && messages.length > 0 && lastMessage && lastMessage.role === 'assistant' && (
+                <button
+                  onClick={onContinueGeneration}
+                  className="text-cyan-300 hover:text-white flex items-center gap-1 font-semibold hover:underline"
+                >
+                  <PlayCircle className="w-3.5 h-3.5 text-cyan-400 fill-cyan-400/20" />
+                  <span>▶ Lanjutkan Kode</span>
+                </button>
+              )}
             </div>
 
             <div className="relative flex items-center">

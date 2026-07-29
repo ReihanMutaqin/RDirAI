@@ -8,16 +8,23 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeKatex from 'rehype-katex';
-import { User, Terminal, Copy, Check, Play, FileText, Image as ImageIcon, FileCode } from 'lucide-react';
+import { User, Terminal, Copy, Check, Play, FileText, Image as ImageIcon, FileCode, PlayCircle } from 'lucide-react';
 
 import 'katex/dist/katex.min.css';
 
 interface ChatMessageProps {
   message: Message;
+  isLastAssistant?: boolean;
   onOpenArtifact?: (artifact: CodeArtifact) => void;
+  onContinueGeneration?: () => void;
 }
 
-export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onOpenArtifact }) => {
+export const ChatMessage: React.FC<ChatMessageProps> = ({
+  message,
+  isLastAssistant,
+  onOpenArtifact,
+  onContinueGeneration,
+}) => {
   const [copied, setCopied] = useState(false);
   const isUser = message.role === 'user';
 
@@ -39,6 +46,30 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onOpenArtifac
       return <FileCode className="w-4 h-4 text-blue-400" />;
     return <FileText className="w-4 h-4 text-gray-400" />;
   };
+
+  // Helper to check if output ended abruptly / code block unclosed
+  const checkIsTruncated = (content: string) => {
+    if (!content) return false;
+    const backtickCount = (content.match(/```/g) || []).length;
+    // Odd number of ``` means a code block was cut off in the middle
+    if (backtickCount % 2 !== 0) return true;
+
+    // Ends with incomplete code statements
+    const trimmed = content.trim();
+    if (
+      trimmed.endsWith('require_once') ||
+      trimmed.endsWith('include') ||
+      trimmed.endsWith('{') ||
+      trimmed.endsWith('(') ||
+      trimmed.endsWith(',') ||
+      trimmed.endsWith(';') === false
+    ) {
+      if (backtickCount > 0) return true;
+    }
+    return false;
+  };
+
+  const isTruncated = !isUser && (checkIsTruncated(message.content) || (isLastAssistant && message.content.length > 500));
 
   return (
     <div
@@ -180,6 +211,19 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onOpenArtifac
               {message.content}
             </ReactMarkdown>
           </div>
+
+          {/* Continue Generation Quick Button */}
+          {isTruncated && onContinueGeneration && (
+            <div className="pt-3">
+              <button
+                onClick={onContinueGeneration}
+                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-blue-950/40 border border-blue-400/30 transition-all group"
+              >
+                <PlayCircle className="w-4 h-4 text-cyan-300 fill-cyan-400/20 transition-transform group-hover:scale-110" />
+                <span>▶ Lanjutkan Penulisan Kode (Continue Generation)</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

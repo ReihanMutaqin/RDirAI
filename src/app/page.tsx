@@ -138,12 +138,21 @@ export default function Home() {
           const code = match[3].trim();
 
           if (code) {
-            fileMap.set(filename, {
-              id: `file_${filename}_${Date.now()}`,
-              filename,
-              language: lang,
-              code,
-            });
+            // Append or update existing file code to support continuation seamlessly
+            const existing = fileMap.get(filename);
+            if (existing) {
+              fileMap.set(filename, {
+                ...existing,
+                code: existing.code + '\n' + code,
+              });
+            } else {
+              fileMap.set(filename, {
+                id: `file_${filename}_${Date.now()}`,
+                filename,
+                language: lang,
+                code,
+              });
+            }
             count++;
           }
         }
@@ -321,6 +330,13 @@ export default function Home() {
     }
   };
 
+  const handleContinueGeneration = () => {
+    if (isLoading) return;
+    const continuePrompt =
+      'Lanjutkan penulisan kode sebelumnya persis dari titik terpotong terakhir tanpa mengulang dari awal. Sambungkan sintaksis dan kode berikut secara utuh.';
+    handleSendMessage(continuePrompt);
+  };
+
   const handleStopStream = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -375,6 +391,7 @@ export default function Home() {
           selectedModel={selectedModel}
           onSelectModel={setSelectedModel}
           onSendMessage={handleSendMessage}
+          onContinueGeneration={handleContinueGeneration}
           onStopStream={handleStopStream}
           onOpenSidebar={() => setIsSidebarOpen(true)}
           onOpenArtifact={(artifact) => setActiveArtifact(artifact)}
