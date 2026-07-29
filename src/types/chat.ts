@@ -1,5 +1,13 @@
 export type Role = 'user' | 'assistant' | 'system';
 
+export interface AttachedFile {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  content: string; // text content or base64 data URL
+}
+
 export interface Message {
   id: string;
   role: Role;
@@ -7,6 +15,7 @@ export interface Message {
   model?: string;
   created_at?: string;
   phases?: GenerationPhase[];
+  attachments?: AttachedFile[];
 }
 
 export interface Conversation {

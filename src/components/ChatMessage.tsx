@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Message, CodeArtifact } from '@/types/chat';
+import { Message, CodeArtifact, AttachedFile } from '@/types/chat';
 import { PhaseTracker } from './PhaseTracker';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeKatex from 'rehype-katex';
-import { User, Terminal, Copy, Check, Play, Sparkles } from 'lucide-react';
+import { User, Terminal, Copy, Check, Play, FileText, Image as ImageIcon, FileCode, Paperclip } from 'lucide-react';
 
 import 'katex/dist/katex.min.css';
 
@@ -25,6 +25,19 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onOpenArtifac
     navigator.clipboard.writeText(message.content);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const getFileIcon = (file: AttachedFile) => {
+    if (file.type.startsWith('image/')) return <ImageIcon className="w-4 h-4 text-pink-400" />;
+    if (file.name.match(/\.(html|css|js|jsx|ts|tsx|php|py|json|sql)$/i))
+      return <FileCode className="w-4 h-4 text-purple-400" />;
+    return <FileText className="w-4 h-4 text-blue-400" />;
   };
 
   return (
@@ -67,6 +80,26 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, onOpenArtifac
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
           </div>
+
+          {/* Attached Files rendering in user message bubble */}
+          {message.attachments && message.attachments.length > 0 && (
+            <div className="flex flex-wrap gap-2 my-2">
+              {message.attachments.map((file) => (
+                <div
+                  key={file.id}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#181c2a] border border-[#282e42] text-xs text-gray-200 shadow-sm"
+                >
+                  {getFileIcon(file)}
+                  <div className="flex flex-col min-w-0 max-w-[180px]">
+                    <span className="truncate font-medium">{file.name}</span>
+                    <span className="text-[10px] text-gray-400 font-mono">
+                      {formatFileSize(file.size)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Phase Execution Timeline Tracker if present */}
           {message.phases && message.phases.length > 0 && (

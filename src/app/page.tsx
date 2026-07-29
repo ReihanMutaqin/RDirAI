@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Conversation, Message, CodeArtifact, GeneratedFile, GenerationPhase } from '@/types/chat';
+import { Conversation, Message, CodeArtifact, GeneratedFile, GenerationPhase, AttachedFile } from '@/types/chat';
 import { Sidebar } from '@/components/Sidebar';
 import { ChatInterface } from '@/components/ChatInterface';
 import { LiveView } from '@/components/LiveView';
@@ -127,7 +127,7 @@ export default function Home() {
       const lang = match[1].toLowerCase();
       const filename = match[2] || `index.${lang === 'javascript' ? 'js' : lang}`;
       const code = match[3].trim();
-      
+
       if (code.length >= 25) {
         return {
           id: `artifact_${Date.now()}`,
@@ -141,7 +141,6 @@ export default function Home() {
     return null;
   };
 
-  // Generate multi-phase execution timeline for code requests
   const createPhasesForPrompt = (promptText: string): GenerationPhase[] => {
     const lower = promptText.toLowerCase();
     if (
@@ -163,19 +162,41 @@ export default function Home() {
     return [];
   };
 
-  const handleSendMessage = async (text: string) => {
+  const handleSendMessage = async (text: string, attachments?: AttachedFile[]) => {
+    // Format full prompt text including attached files context
+    let fullPromptContent = text;
+
+    if (attachments && attachments.length > 0) {
+      const fileContexts = attachments
+        .map((att) => {
+          if (att.content.startsWith('data:image')) {
+            return `\n\n[Lampiran Gambar: ${att.name} (${(att.size / 1024).toFixed(1)} KB)]`;
+          }
+          return `\n\n[Lampiran File: ${att.name} (${(att.size / 1024).toFixed(1)} KB)]\n\`\`\`\n${att.content}\n\`\`\``;
+        })
+        .join('\n');
+
+      fullPromptContent = (text ? text + '\n' : '') + fileContexts;
+    }
+
     const userMsg: Message = {
       id: `msg_u_${Date.now()}`,
       role: 'user',
-      content: text,
+      content: text || 'File terlampir',
       created_at: new Date().toISOString(),
+      attachments,
     };
 
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
+    const apiUserMsg: Message = {
+      ...userMsg,
+      content: fullPromptContent,
+    };
+
+    const newMessages = [...messages, apiUserMsg];
+    setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
 
-    const initialPhases = createPhasesForPrompt(text);
+    const initialPhases = createPhasesForPrompt(text || fullPromptContent);
 
     const assistantMsgId = `msg_a_${Date.now()}`;
     const initialAssistantMsg: Message = {
@@ -226,7 +247,6 @@ export default function Home() {
         const chunk = decoder.decode(value, { stream: true });
         accumulated += chunk;
 
-        // Dynamic phase progress update as response arrives
         const updatedPhases = initialPhases.map((p) => {
           if (accumulated.length > 500 && p.id === 1) return { ...p, status: 'completed' as const };
           if (accumulated.length > 500 && accumulated.length <= 1500 && p.id === 2)
@@ -256,7 +276,6 @@ export default function Home() {
         });
       }
 
-      // Mark all phases completed at stream end
       if (initialPhases.length > 0) {
         const finalPhases = initialPhases.map((p) => ({ ...p, status: 'completed' as const }));
         setMessages((prev) =>
@@ -305,7 +324,7 @@ export default function Home() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-kimi-bg">
-      {/* Sidebar Navigation & Folder Workspace Explorer */}
+      {/* Sidebar Navigation */}
       <Sidebar
         conversations={conversations}
         activeId={activeConvId}
@@ -332,7 +351,7 @@ export default function Home() {
           activeArtifact={activeArtifact}
         />
 
-        {/* Live View Split Screen (Claude Artifacts style) */}
+        {/* Live View Split Screen */}
         {activeArtifact && (
           <LiveView
             artifact={activeArtifact}
