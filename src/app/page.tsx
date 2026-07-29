@@ -23,17 +23,14 @@ export default function Home() {
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Fetch logged in user profile on load
   useEffect(() => {
     checkCurrentUser();
   }, []);
 
-  // Fetch initial conversations whenever user state changes
   useEffect(() => {
     fetchConversations();
   }, [user]);
 
-  // Fetch messages when active conversation changes
   useEffect(() => {
     if (activeConvId) {
       fetchMessages(activeConvId);
@@ -43,7 +40,6 @@ export default function Home() {
     }
   }, [activeConvId]);
 
-  // Extract all files from messages into workspace folder
   useEffect(() => {
     extractAllFilesFromMessages(messages);
   }, [messages]);
@@ -123,7 +119,7 @@ export default function Home() {
     }
   };
 
-  // Extract code blocks from content into files array for Sidebar Folder Explorer
+  // Clean file extraction with deduplication (index.html, style.css, script.js)
   const extractAllFilesFromMessages = (msgList: Message[]) => {
     const fileMap: Map<string, GeneratedFile> = new Map();
     const codeBlockRegex = /```(html|xml|svg|javascript|jsx|js|css|php|python|json|sql)?\s*([a-zA-Z0-9_\-\.]+\.[a-zA-Z0-9]+)?\n([\s\S]*?)```/gi;
@@ -131,10 +127,16 @@ export default function Home() {
     msgList.forEach((msg) => {
       if (msg.role === 'assistant') {
         let match;
-        let count = 1;
         while ((match = codeBlockRegex.exec(msg.content)) !== null) {
           const lang = match[1]?.toLowerCase() || 'html';
-          const filename = match[2] || `file_${count}.${lang === 'javascript' ? 'js' : lang}`;
+          
+          let defaultFilename = `index.${lang === 'javascript' || lang === 'jsx' ? 'js' : lang}`;
+          if (lang === 'css') defaultFilename = 'style.css';
+          if (lang === 'js' || lang === 'javascript') defaultFilename = 'script.js';
+          if (lang === 'php') defaultFilename = 'index.php';
+          if (lang === 'svg') defaultFilename = 'vector.svg';
+
+          const filename = match[2] || defaultFilename;
           const code = match[3].trim();
 
           if (code) {
@@ -152,7 +154,6 @@ export default function Home() {
                 code,
               });
             }
-            count++;
           }
         }
       }
@@ -398,10 +399,11 @@ export default function Home() {
           activeArtifact={activeArtifact}
         />
 
-        {/* Live View Split Screen */}
+        {/* Live View Split Screen with allFiles workspace bundling */}
         {activeArtifact && (
           <LiveView
             artifact={activeArtifact}
+            allFiles={generatedFiles}
             onClose={() => setActiveArtifact(null)}
           />
         )}
