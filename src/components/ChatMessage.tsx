@@ -432,27 +432,47 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 rehypePlugins={[rehypeHighlight, rehypeKatex]}
                 components={{
                 table: ({ node, ...props }: any) => (
-                  <div className="my-5 overflow-x-auto rounded-xl border border-blue-100 bg-gradient-to-b from-white to-blue-50/20 shadow-sm">
+                  <div className="my-6 overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-lg shadow-slate-200/50">
                     <table className="w-full text-left text-xs border-collapse" {...props} />
                   </div>
                 ),
                 thead: ({ node, ...props }: any) => (
-                  <thead className="bg-slate-900 text-slate-100 font-semibold uppercase text-[11px] tracking-wider border-b border-slate-800" {...props} />
+                  <thead className="bg-slate-950 text-white font-bold uppercase text-[11px] tracking-wider border-b border-slate-800" {...props} />
                 ),
                 th: ({ node, ...props }: any) => (
-                  <th className="px-4 py-3 font-mono font-medium text-blue-300" {...props} />
+                  <th className="px-4 py-3.5 font-mono font-bold text-purple-300 bg-slate-950" {...props} />
                 ),
                 tr: ({ node, ...props }: any) => (
-                  <tr className="border-b border-gray-100 hover:bg-blue-50/60 transition-colors odd:bg-white even:bg-slate-50/50" {...props} />
+                  <tr className="border-b border-slate-100 hover:bg-purple-50/60 transition-colors odd:bg-white even:bg-slate-50/70" {...props} />
                 ),
                 td: ({ node, ...props }: any) => (
-                  <td className="px-4 py-3 font-sans text-gray-700 font-medium" {...props} />
+                  <td className="px-4 py-3 font-sans text-slate-900 font-semibold" {...props} />
                 ),
-                h3: ({node, ...props}: any) => <h3 className="text-[15px] font-semibold text-gray-800 mt-6 mb-2" {...props} />,
-                h4: ({node, ...props}: any) => <h4 className="text-[14px] font-semibold text-gray-700 mt-5 mb-2" {...props} />,
-                p: ({node, ...props}: any) => <p className="text-gray-600 leading-relaxed mb-4" {...props} />,
+                h1: ({node, ...props}: any) => <h1 className="text-xl font-extrabold text-slate-950 mt-6 mb-3 tracking-tight border-b border-slate-200 pb-2" {...props} />,
+                h2: ({node, ...props}: any) => <h2 className="text-lg font-bold text-slate-900 mt-6 mb-3 tracking-tight border-b border-slate-200 pb-1.5" {...props} />,
+                h3: ({node, ...props}: any) => <h3 className="text-base font-bold text-slate-900 mt-5 mb-2 flex items-center gap-2" {...props} />,
+                h4: ({node, ...props}: any) => <h4 className="text-sm font-bold text-slate-800 mt-4 mb-2" {...props} />,
+                p: ({node, ...props}: any) => <p className="text-slate-800 font-medium leading-relaxed mb-4 text-sm" {...props} />,
+                li: ({node, ...props}: any) => <li className="text-slate-800 font-medium leading-relaxed mb-1 text-sm" {...props} />,
+                strong: ({node, ...props}: any) => <strong className="font-bold text-slate-950 bg-purple-50/80 px-1.5 py-0.5 rounded border border-purple-200/60" {...props} />,
                 img: ({node, src, alt, ...props}: any) => {
                   if (!src) return null;
+                  
+                  // Filter out junk UI icons (thumbs, emojis, social share buttons)
+                  const isJunkIcon = /thumbs|like|dislike|emoji|avatar|icon|button|share|facebook|twitter|whatsapp|1x1|micro|tiny/i.test(src) || /thumbs|like|dislike|emoji|avatar|icon/i.test(alt || '');
+                  if (isJunkIcon) return null;
+
+                  const isAiGenerated = src.includes('pollinations.ai') || src.includes('flux') || src.includes('data:image/svg+xml') || (alt || '').toLowerCase().includes('flux') || (alt || '').toLowerCase().includes('desain logo');
+                  
+                  if (!isAiGenerated) {
+                    return (
+                      <div className="my-4 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 max-w-md shadow-sm">
+                        <img src={src} alt={alt || 'Gambar Web'} className="w-full max-h-64 object-cover" loading="lazy" />
+                        {alt && <div className="px-3 py-1.5 text-[11px] font-medium text-slate-600 bg-white border-t border-slate-100 truncate">{alt}</div>}
+                      </div>
+                    );
+                  }
+
                   return <VisualAssetCard src={src} alt={alt} />;
                 },
                 code({ node, inline, className, children, ...props }: any) {
