@@ -122,8 +122,15 @@ async function fetchCompletionWithFallback(
 ): Promise<Response> {
   const modelsToTry = Array.from(new Set([
     model,
+    'google/gemini-2.0-flash-exp:free',
     'meta-llama/llama-3.3-70b-instruct:free',
-    'qwen/qwen-2.5-coder-32b-instruct:free'
+    'qwen/qwen-2.5-coder-32b-instruct:free',
+    'deepseek/deepseek-r1:free',
+    'deepseek/deepseek-chat:free',
+    'mistralai/mistral-7b-instruct:free',
+    'google/gemini-2.0-pro-exp-02-05:free',
+    'openchat/openchat-7b:free',
+    'microsoft/phi-3-medium-128k-instruct:free'
   ])).filter(Boolean);
 
   for (const m of modelsToTry) {
@@ -148,14 +155,17 @@ async function fetchCompletionWithFallback(
       });
       clearTimeout(timer);
 
-      if (res.ok) return res;
+      if (res.ok) {
+        console.log(`Successfully connected to OpenRouter model: ${m}`);
+        return res;
+      }
     } catch (e) {
-      console.warn(`OpenRouter model ${m} timed out/rate-limited, trying next...`);
+      console.warn(`OpenRouter model ${m} timed out/rate-limited, trying next free model in pool...`);
     }
   }
 
   // Ultimate Fast Engine: Pollinations AI Free Unlimited Text Engine (No API Key, No Rate Limits)
-  console.warn('All OpenRouter attempts timed out or 429 rate-limited. Activating Pollinations Unlimited Engine!');
+  console.warn('All OpenRouter free models rate-limited or timed out. Activating Pollinations Unlimited Engine!');
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8000);
   const res = await fetch('https://text.pollinations.ai/openai/chat/completions', {
@@ -281,16 +291,23 @@ ATURAN PRESENTASI MUTLAK:
 
   const targetModel = selectedModel && !selectedModel.toLowerCase().includes('you')
     ? selectedModel
-    : (process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'meta-llama/llama-3.3-70b-instruct:free');
+    : (process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'google/gemini-2.0-flash-exp:free');
 
   let fullText = '';
   try {
     const res = await fetchCompletionWithFallback(formatMessages, targetModel, orApiKey);
-    if (res.ok) {
+    if (res && res.ok) {
       fullText = await parseAndEnqueueStream(res, controller, encoder, decoder);
     }
   } catch (err) {
     console.error('LLM formatting failed:', err);
+  }
+
+  // 100% Guaranteed Non-Empty Fallback (Never leaves UI hanging on "Mencari informasi...")
+  if (!fullText.trim()) {
+    const fallbackNotice = `📌 **Ringkasan Informasi Web Terkini**\n\nBerikut adalah data hasil pencarian internet untuk: **${userPrompt}**\n\n${rawSearchData.substring(0, 1500)}`;
+    controller.enqueue(encoder.encode(fallbackNotice));
+    fullText = fallbackNotice;
   }
 
   return fullText;
