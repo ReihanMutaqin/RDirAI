@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     await initDb();
     const userId = await getCurrentUserId();
     const body = await request.json();
-    const { conversationId, messages, model, isImageMode } = body;
+    const { conversationId, messages, model, isImageMode, searchMode } = body;
 
     const orApiKey = process.env.OPENROUTER_API_KEY;
     const ydcApiKey = process.env.YDC_API_KEY;
@@ -97,7 +97,6 @@ export async function POST(request: Request) {
       }
     }
 
-    const isYouModel = selectedModel.toLowerCase().includes('you');
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
     let accumulatedContent = '';
@@ -105,16 +104,46 @@ export async function POST(request: Request) {
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          if (isYouModel) {
-            // YOU.COM LOGIC
+          // 1. SKILL: WEB SEARCH INSTAN (/v1/search)
+          if (searchMode === 'web_search') {
             if (!ydcApiKey) throw new Error("YDC_API_KEY is missing in .env");
             
-            // Berikan feedback instan ke UI agar tidak terkesan nge-hang
-            const searchMessage = "> 🔍 *Sedang menjelajahi internet untuk mencari data terbaru...*\n\n";
-            accumulatedContent += searchMessage;
-            controller.enqueue(encoder.encode(searchMessage));
+            const searchNotice = "> 🔍 *Mencari informasi di web secara instan...*\n\n";
+            accumulatedContent += searchNotice;
+            controller.enqueue(encoder.encode(searchNotice));
 
-            const response = await fetch('https://api.you.com/v1/research', {
+            const res = await fetch(`https://api.you.com/v1/search?query=${encodeURIComponent(lastUserMessage.content)}`, {
+              headers: { 'X-API-Key': ydcApiKey }
+            });
+            if (!res.ok) throw new Error(`You.com Search API error: ${await res.text()}`);
+            const data = await res.json();
+            
+            let resultMarkdown = "### 🔍 Hasil Pencarian Web Instan:\n\n";
+            if (data.hits && data.hits.length > 0) {
+              data.hits.slice(0, 5).forEach((hit: any) => {
+                resultMarkdown += `#### 🌐 [${hit.title}](${hit.url})\n${hit.snippets?.join(' ') || ''}\n\n`;
+              });
+            } else {
+              resultMarkdown += data.answer || "Tidak ada hasil instan spesifik dari pencarian.";
+            }
+
+            const chunkSize = 6;
+            for (let i = 0; i < resultMarkdown.length; i += chunkSize) {
+              const chunk = resultMarkdown.slice(i, i + chunkSize);
+              accumulatedContent += chunk;
+              controller.enqueue(encoder.encode(chunk));
+              await new Promise(r => setTimeout(r, 8));
+            }
+          }
+          // 2. SKILL: DEEP RESEARCH (/v1/research exhaustive)
+          else if (searchMode === 'deep_research') {
+            if (!ydcApiKey) throw new Error("YDC_API_KEY is missing in .env");
+            
+            const researchNotice = "> 🔭 *Melakukan riset internet secara mendalam (Exhaustive Research)...*\n\n";
+            accumulatedContent += researchNotice;
+            controller.enqueue(encoder.encode(researchNotice));
+
+            const res = await fetch('https://api.you.com/v1/research', {
               method: 'POST',
               headers: {
                 'X-API-Key': ydcApiKey,
@@ -126,18 +155,48 @@ export async function POST(request: Request) {
               }),
             });
 
-            if (!response.ok) throw new Error(`You.com API error: ${await response.text()}`);
-
-            const data = await response.json();
-            const content = data.output?.content || data.answer || data.text || data.response || "Maaf, tidak ada jawaban khusus teks dari You.com.";
+            if (!res.ok) throw new Error(`You.com Research API error: ${await res.text()}`);
+            const data = await res.json();
+            const content = data.output?.content || data.answer || data.text || "Tidak ada hasil analisis riset.";
             
-            // FAKE STREAMING FOR UI/UX
-            const chunkSize = 4;
+            const chunkSize = 6;
             for (let i = 0; i < content.length; i += chunkSize) {
               const chunk = content.slice(i, i + chunkSize);
               accumulatedContent += chunk;
               controller.enqueue(encoder.encode(chunk));
-              await new Promise(r => setTimeout(r, 10));
+              await new Promise(r => setTimeout(r, 8));
+            }
+          }
+          // 3. SKILL: FINANCE RESEARCH (Pasar Keuangan, Kripto, Saham)
+          else if (searchMode === 'finance') {
+            if (!ydcApiKey) throw new Error("YDC_API_KEY is missing in .env");
+            
+            const financeNotice = "> 📈 *Menganalisis data pasar finansial, saham, & kripto...*\n\n";
+            accumulatedContent += financeNotice;
+            controller.enqueue(encoder.encode(financeNotice));
+
+            const res = await fetch('https://api.you.com/v1/research', {
+              method: 'POST',
+              headers: {
+                'X-API-Key': ydcApiKey,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                input: `${lastUserMessage.content} (Berikan data finansial lengkap, harga saham/kripto real-time, statistik dan analisis pasar)`,
+                research_effort: 'standard',
+              }),
+            });
+
+            if (!res.ok) throw new Error(`You.com Finance API error: ${await res.text()}`);
+            const data = await res.json();
+            const content = data.output?.content || data.answer || data.text || "Tidak ada data finansial.";
+            
+            const chunkSize = 6;
+            for (let i = 0; i < content.length; i += chunkSize) {
+              const chunk = content.slice(i, i + chunkSize);
+              accumulatedContent += chunk;
+              controller.enqueue(encoder.encode(chunk));
+              await new Promise(r => setTimeout(r, 8));
             }
           } else {
             // OPENROUTER LOGIC

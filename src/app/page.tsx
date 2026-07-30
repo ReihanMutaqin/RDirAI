@@ -17,8 +17,7 @@ export default function Home() {
   const [selectedModel, setSelectedModel] = useState<string>(
     process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'inclusionai/ling-3.0-flash:free'
   );
-  const [isWebSearchActive, setIsWebSearchActive] = useState(false);
-  const [isImageModeActive, setIsImageModeActive] = useState(false);
+  const [activeSkill, setActiveSkill] = useState<'none' | 'web_search' | 'deep_research' | 'finance' | 'image'>('none');
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeArtifact, setActiveArtifact] = useState<CodeArtifact | null>(null);
@@ -281,7 +280,8 @@ export default function Home() {
           conversationId: activeConvId,
           messages: newMessages,
           model: activeModel,
-          isImageMode: isImageModeActive,
+          isImageMode: activeSkill === 'image',
+          searchMode: activeSkill !== 'image' && activeSkill !== 'none' ? activeSkill : undefined,
         }),
         signal: controller.signal,
       });
@@ -427,10 +427,8 @@ export default function Home() {
           isLoading={isLoading}
           selectedModel={selectedModel}
           onSelectModel={setSelectedModel}
-          isWebSearchActive={isWebSearchActive}
-          setIsWebSearchActive={setIsWebSearchActive}
-          isImageModeActive={isImageModeActive}
-          setIsImageModeActive={setIsImageModeActive}
+          activeSkill={activeSkill}
+          setActiveSkill={setActiveSkill}
           onSendMessage={handleSendMessage}
           onContinueGeneration={handleContinueGeneration}
           onStopStream={handleStopStream}

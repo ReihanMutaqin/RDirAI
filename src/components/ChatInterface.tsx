@@ -26,6 +26,8 @@ import {
   Folder,
   Globe,
   ImageIcon,
+  TrendingUp,
+  Compass,
 } from 'lucide-react';
 
 interface ChatInterfaceProps {
@@ -34,10 +36,8 @@ interface ChatInterfaceProps {
   isLoading: boolean;
   selectedModel: string;
   onSelectModel: (modelId: string) => void;
-  isWebSearchActive: boolean;
-  setIsWebSearchActive: (active: boolean) => void;
-  isImageModeActive: boolean;
-  setIsImageModeActive: (active: boolean) => void;
+  activeSkill: 'none' | 'web_search' | 'deep_research' | 'finance' | 'image';
+  setActiveSkill: (skill: 'none' | 'web_search' | 'deep_research' | 'finance' | 'image') => void;
   onSendMessage: (text: string, attachments?: AttachedFile[]) => void;
   onContinueGeneration: () => void;
   onStopStream: () => void;
@@ -54,10 +54,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   isLoading,
   selectedModel,
   onSelectModel,
-  isWebSearchActive,
-  setIsWebSearchActive,
-  isImageModeActive,
-  setIsImageModeActive,
+  activeSkill,
+  setActiveSkill,
   onSendMessage,
   onContinueGeneration,
   onStopStream,
@@ -413,16 +411,16 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 <div className="max-w-4xl mx-auto space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-sm border ${isImageModeActive ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
-                        {isImageModeActive ? <ImageIcon className="w-5 h-5 animate-pulse" /> : <Loader2 className="w-5 h-5 animate-spin" />}
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-sm border ${activeSkill === 'image' ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
+                        {activeSkill === 'image' ? <ImageIcon className="w-5 h-5 animate-pulse" /> : <Loader2 className="w-5 h-5 animate-spin" />}
                       </div>
                       <div>
-                        <div className={`text-xs font-bold flex items-center gap-2 font-mono ${isImageModeActive ? 'text-purple-700' : 'text-blue-700'}`}>
-                          <span className={`w-2 h-2 rounded-full animate-ping ${isImageModeActive ? 'bg-purple-500' : 'bg-blue-500'}`}></span>
-                          {isImageModeActive ? `MEMBUAT MAHAKARYA SENI (${elapsedSeconds} detik)` : `PROSES ENGINE SEDANG BERJALAN (${elapsedSeconds} detik)`}
+                        <div className={`text-xs font-bold flex items-center gap-2 font-mono ${activeSkill === 'image' ? 'text-purple-700' : 'text-blue-700'}`}>
+                          <span className={`w-2 h-2 rounded-full animate-ping ${activeSkill === 'image' ? 'bg-purple-500' : 'bg-blue-500'}`}></span>
+                          {activeSkill === 'image' ? `MEMBUAT MAHAKARYA SENI (${elapsedSeconds} detik)` : `PROSES ENGINE SEDANG BERJALAN (${elapsedSeconds} detik)`}
                         </div>
                         <div className="text-[11px] text-gray-500 mt-0.5">
-                          {isImageModeActive ? 'AI sedang meracik prompt visual & merender gambar High-Resolution...' : 'Menyusun arsitektur file workspace & menulis kode secara real-time...'}
+                          {activeSkill === 'image' ? 'AI sedang meracik prompt visual & merender gambar High-Resolution...' : 'Menyusun arsitektur file workspace & menulis kode secara real-time...'}
                         </div>
                       </div>
                     </div>
@@ -437,7 +435,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   </div>
 
                   {/* Always Pinned Phase Execution Timeline inside the Processing Card */}
-                  {!isImageModeActive && activePhases && activePhases.length > 0 && (
+                  {activeSkill !== 'image' && activePhases && activePhases.length > 0 && (
                     <PhaseTracker phases={activePhases} />
                   )}
                 </div>
@@ -510,40 +508,80 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   SVG
                 </span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* 1. Web Search Instan */}
                 <button
                   type="button"
-                  onClick={() => setIsWebSearchActive(!isWebSearchActive)}
+                  onClick={() => setActiveSkill(activeSkill === 'web_search' ? 'none' : 'web_search')}
                   disabled={messages.length > 0}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors border ${
-                    isWebSearchActive 
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-semibold transition-colors border ${
+                    activeSkill === 'web_search'
                       ? 'bg-blue-50 border-blue-200 text-blue-700' 
                       : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700'
                   } ${messages.length > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  title="Aktifkan Skill Pencarian Web (Real-time Web Search)"
+                  title="Web Search Instan (Cepat)"
                 >
-                  <Globe className={`w-3.5 h-3.5 ${isWebSearchActive ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <Globe className={`w-3.5 h-3.5 ${activeSkill === 'web_search' ? 'text-blue-600' : 'text-gray-400'}`} />
                   Web Search
-                  <div className={`ml-1 w-6 h-3.5 rounded-full relative transition-colors ${isWebSearchActive ? 'bg-blue-500' : 'bg-gray-300'}`}>
-                    <div className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-all shadow-sm ${isWebSearchActive ? 'left-[14px]' : 'left-0.5'}`}></div>
+                  <div className={`ml-1 w-5 h-3 rounded-full relative transition-colors ${activeSkill === 'web_search' ? 'bg-blue-500' : 'bg-gray-300'}`}>
+                    <div className={`absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all shadow-sm ${activeSkill === 'web_search' ? 'left-[10px]' : 'left-0.5'}`}></div>
                   </div>
                 </button>
 
+                {/* 2. Deep Research */}
                 <button
                   type="button"
-                  onClick={() => setIsImageModeActive(!isImageModeActive)}
+                  onClick={() => setActiveSkill(activeSkill === 'deep_research' ? 'none' : 'deep_research')}
                   disabled={messages.length > 0}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors border ${
-                    isImageModeActive 
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-semibold transition-colors border ${
+                    activeSkill === 'deep_research'
+                      ? 'bg-cyan-50 border-cyan-200 text-cyan-700' 
+                      : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                  } ${messages.length > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title="Riset Internet Mendalam (Exhaustive Research)"
+                >
+                  <Compass className={`w-3.5 h-3.5 ${activeSkill === 'deep_research' ? 'text-cyan-600' : 'text-gray-400'}`} />
+                  Riset Mendalam
+                  <div className={`ml-1 w-5 h-3 rounded-full relative transition-colors ${activeSkill === 'deep_research' ? 'bg-cyan-500' : 'bg-gray-300'}`}>
+                    <div className={`absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all shadow-sm ${activeSkill === 'deep_research' ? 'left-[10px]' : 'left-0.5'}`}></div>
+                  </div>
+                </button>
+
+                {/* 3. Finance Research */}
+                <button
+                  type="button"
+                  onClick={() => setActiveSkill(activeSkill === 'finance' ? 'none' : 'finance')}
+                  disabled={messages.length > 0}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-semibold transition-colors border ${
+                    activeSkill === 'finance'
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
+                      : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                  } ${messages.length > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title="Riset Pasar Keuangan, Kripto, & Saham"
+                >
+                  <TrendingUp className={`w-3.5 h-3.5 ${activeSkill === 'finance' ? 'text-emerald-600' : 'text-gray-400'}`} />
+                  Finansial
+                  <div className={`ml-1 w-5 h-3 rounded-full relative transition-colors ${activeSkill === 'finance' ? 'bg-emerald-500' : 'bg-gray-300'}`}>
+                    <div className={`absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all shadow-sm ${activeSkill === 'finance' ? 'left-[10px]' : 'left-0.5'}`}></div>
+                  </div>
+                </button>
+
+                {/* 4. Mode Gambar */}
+                <button
+                  type="button"
+                  onClick={() => setActiveSkill(activeSkill === 'image' ? 'none' : 'image')}
+                  disabled={messages.length > 0}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-semibold transition-colors border ${
+                    activeSkill === 'image'
                       ? 'bg-purple-50 border-purple-200 text-purple-700' 
                       : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700'
                   } ${messages.length > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  title="Aktifkan Mode Gambar (Generate HD Image)"
+                  title="Aktifkan Mode Gambar (Generate HD FLUX Image)"
                 >
-                  <ImageIcon className={`w-3.5 h-3.5 ${isImageModeActive ? 'text-purple-600' : 'text-gray-400'}`} />
+                  <ImageIcon className={`w-3.5 h-3.5 ${activeSkill === 'image' ? 'text-purple-600' : 'text-gray-400'}`} />
                   Mode Gambar
-                  <div className={`ml-1 w-6 h-3.5 rounded-full relative transition-colors ${isImageModeActive ? 'bg-purple-500' : 'bg-gray-300'}`}>
-                    <div className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-all shadow-sm ${isImageModeActive ? 'left-[14px]' : 'left-0.5'}`}></div>
+                  <div className={`ml-1 w-5 h-3 rounded-full relative transition-colors ${activeSkill === 'image' ? 'bg-purple-500' : 'bg-gray-300'}`}>
+                    <div className={`absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all shadow-sm ${activeSkill === 'image' ? 'left-[10px]' : 'left-0.5'}`}></div>
                   </div>
                 </button>
               </div>
