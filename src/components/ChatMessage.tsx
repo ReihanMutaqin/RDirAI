@@ -131,7 +131,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   };
 
   const normalizeFilename = (rawName: string | undefined, lang: string): string => {
-    const cleanLang = (lang || 'html').toLowerCase();
+    const cleanLang = (lang || '').toLowerCase();
+
+    // Do NOT treat chart, json, markdown, or text blocks as downloadable code files
+    if (!cleanLang || ['chart', 'json', 'markdown', 'md', 'text', 'txt', 'bash', 'sh'].includes(cleanLang)) {
+      return '';
+    }
 
     // Fix generic/numbered filenames (file_1.html, index_2.html) -> standard web file names
     if (!rawName || rawName.match(/^(file|index|code|snippet)[\-_]?\d*/i)) {
@@ -139,7 +144,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
       if (['js', 'javascript', 'jsx', 'ts', 'tsx'].includes(cleanLang)) return 'script.js';
       if (cleanLang === 'php') return 'index.php';
       if (cleanLang === 'svg') return 'vector.svg';
-      return 'index.html';
+      if (cleanLang === 'html' || cleanLang === 'xml') return 'index.html';
+      return '';
     }
 
     return rawName.trim();
@@ -149,11 +155,13 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   const getCreatedFiles = (content: string) => {
     if (isUser || !content) return [];
     const filesMap = new Map<string, { filename: string; language: string; code: string }>();
-    const codeBlockRegex = /```(html|xml|svg|javascript|jsx|js|css|php|python|json|sql)?\s*([a-zA-Z0-9_\-\.]+\.[a-zA-Z0-9]+)?\n([\s\S]*?)(?:```|$)/gi;
+    const codeBlockRegex = /```(html|xml|svg|javascript|jsx|js|css|php|python|json|chart|markdown)?\s*([a-zA-Z0-9_\-\.]+\.[a-zA-Z0-9]+)?\n([\s\S]*?)(?:```|$)/gi;
     let match;
     while ((match = codeBlockRegex.exec(content)) !== null) {
-      const lang = match[1]?.toLowerCase() || 'html';
+      const lang = match[1]?.toLowerCase() || '';
       const filename = normalizeFilename(match[2], lang);
+      if (!filename) continue; // Skip non-web-file blocks (like chart JSON)
+
       const code = match[3].trim();
       if (code.length >= 10) {
         const existing = filesMap.get(filename);

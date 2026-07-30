@@ -47,14 +47,20 @@ export default function Home() {
   }, [activeConvId]);
 
   const normalizeFilename = (rawName: string | undefined, lang: string): string => {
-    const cleanLang = (lang || 'html').toLowerCase();
+    const cleanLang = (lang || '').toLowerCase();
+
+    // Do NOT treat chart, json, markdown, or text blocks as downloadable code files
+    if (!cleanLang || ['chart', 'json', 'markdown', 'md', 'text', 'txt', 'bash', 'sh'].includes(cleanLang)) {
+      return '';
+    }
 
     if (!rawName || rawName.match(/^(file|index|code|snippet)[\-_]?\d*/i)) {
       if (cleanLang === 'css') return 'style.css';
       if (['js', 'javascript', 'jsx', 'ts', 'tsx'].includes(cleanLang)) return 'script.js';
       if (cleanLang === 'php') return 'index.php';
       if (cleanLang === 'svg') return 'vector.svg';
-      return 'index.html';
+      if (cleanLang === 'html' || cleanLang === 'xml') return 'index.html';
+      return '';
     }
 
     return rawName.trim();
@@ -63,14 +69,16 @@ export default function Home() {
   // Clean file extraction with deduplication (index.html, style.css, script.js)
   const extractAllFilesFromMessages = (msgList: Message[]) => {
     const fileMap: Map<string, GeneratedFile> = new Map();
-    const codeBlockRegex = /```(html|xml|svg|javascript|jsx|js|css|php|python|json|sql)?\s*([a-zA-Z0-9_\-\.]+\.[a-zA-Z0-9]+)?\n([\s\S]*?)(?:```|$)/gi;
+    const codeBlockRegex = /```(html|xml|svg|javascript|jsx|js|css|php|python|json|chart|markdown)?\s*([a-zA-Z0-9_\-\.]+\.[a-zA-Z0-9]+)?\n([\s\S]*?)(?:```|$)/gi;
 
     msgList.forEach((msg) => {
       if (msg.role === 'assistant') {
         let match;
         while ((match = codeBlockRegex.exec(msg.content)) !== null) {
-          const lang = match[1]?.toLowerCase() || 'html';
+          const lang = match[1]?.toLowerCase() || '';
           const filename = normalizeFilename(match[2], lang);
+          if (!filename) continue; // Skip non-code blocks (like chart JSON)
+
           const code = match[3].trim();
 
           if (code && code.length >= 5) {
