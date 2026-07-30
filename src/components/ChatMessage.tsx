@@ -149,7 +149,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   const getCreatedFiles = (content: string) => {
     if (isUser || !content) return [];
     const filesMap = new Map<string, { filename: string; language: string; code: string }>();
-    const codeBlockRegex = /```(html|xml|svg|javascript|jsx|js|css|php|python|json|sql)?\s*([a-zA-Z0-9_\-\.]+\.[a-zA-Z0-9]+)?\n([\s\S]*?)```/gi;
+    const codeBlockRegex = /```(html|xml|svg|javascript|jsx|js|css|php|python|json|sql)?\s*([a-zA-Z0-9_\-\.]+\.[a-zA-Z0-9]+)?\n([\s\S]*?)(?:```|$)/gi;
     let match;
     while ((match = codeBlockRegex.exec(content)) !== null) {
       const lang = match[1]?.toLowerCase() || 'html';

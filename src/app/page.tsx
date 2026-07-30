@@ -46,6 +46,58 @@ export default function Home() {
     }
   }, [activeConvId]);
 
+  const normalizeFilename = (rawName: string | undefined, lang: string): string => {
+    const cleanLang = (lang || 'html').toLowerCase();
+
+    if (!rawName || rawName.match(/^(file|index|code|snippet)[\-_]?\d*/i)) {
+      if (cleanLang === 'css') return 'style.css';
+      if (['js', 'javascript', 'jsx', 'ts', 'tsx'].includes(cleanLang)) return 'script.js';
+      if (cleanLang === 'php') return 'index.php';
+      if (cleanLang === 'svg') return 'vector.svg';
+      return 'index.html';
+    }
+
+    return rawName.trim();
+  };
+
+  // Clean file extraction with deduplication (index.html, style.css, script.js)
+  const extractAllFilesFromMessages = (msgList: Message[]) => {
+    const fileMap: Map<string, GeneratedFile> = new Map();
+    const codeBlockRegex = /```(html|xml|svg|javascript|jsx|js|css|php|python|json|sql)?\s*([a-zA-Z0-9_\-\.]+\.[a-zA-Z0-9]+)?\n([\s\S]*?)(?:```|$)/gi;
+
+    msgList.forEach((msg) => {
+      if (msg.role === 'assistant') {
+        let match;
+        while ((match = codeBlockRegex.exec(msg.content)) !== null) {
+          const lang = match[1]?.toLowerCase() || 'html';
+          const filename = normalizeFilename(match[2], lang);
+          const code = match[3].trim();
+
+          if (code && code.length >= 5) {
+            const existing = fileMap.get(filename);
+            const isFullHtml = lang === 'html' && (code.includes('<!DOCTYPE html>') || code.includes('<html'));
+            
+            if (existing && !isFullHtml) {
+              fileMap.set(filename, {
+                ...existing,
+                code: code.length > existing.code.length ? code : existing.code,
+              });
+            } else {
+              fileMap.set(filename, {
+                id: `file_${filename}_${Date.now()}`,
+                filename,
+                language: lang,
+                code,
+              });
+            }
+          }
+        }
+      }
+    });
+
+    setGeneratedFiles(Array.from(fileMap.values()));
+  };
+
   useEffect(() => {
     extractAllFilesFromMessages(messages);
   }, [messages]);
@@ -129,59 +181,6 @@ export default function Home() {
     } catch (err) {
       console.error('Error deleting conversation:', err);
     }
-  };
-
-  const normalizeFilename = (rawName: string | undefined, lang: string): string => {
-    const cleanLang = (lang || 'html').toLowerCase();
-
-    if (!rawName || rawName.match(/^(file|index|code|snippet)[\-_]?\d*/i)) {
-      if (cleanLang === 'css') return 'style.css';
-      if (['js', 'javascript', 'jsx', 'ts', 'tsx'].includes(cleanLang)) return 'script.js';
-      if (cleanLang === 'php') return 'index.php';
-      if (cleanLang === 'svg') return 'vector.svg';
-      return 'index.html';
-    }
-
-    return rawName.trim();
-  };
-
-  // Clean file extraction with deduplication (index.html, style.css, script.js)
-  const extractAllFilesFromMessages = (msgList: Message[]) => {
-    const fileMap: Map<string, GeneratedFile> = new Map();
-    const codeBlockRegex = /```(html|xml|svg|javascript|jsx|js|css|php|python|json|sql)?\s*([a-zA-Z0-9_\-\.]+\.[a-zA-Z0-9]+)?\n([\s\S]*?)```/gi;
-
-    msgList.forEach((msg) => {
-      if (msg.role === 'assistant') {
-        let match;
-        while ((match = codeBlockRegex.exec(msg.content)) !== null) {
-          const lang = match[1]?.toLowerCase() || 'html';
-          const filename = normalizeFilename(match[2], lang);
-          const code = match[3].trim();
-
-          if (code) {
-            const existing = fileMap.get(filename);
-            // If the code is a full HTML document (rewrite), we MUST replace it entirely to prevent duplicate <html> tags
-            const isFullHtml = lang === 'html' && (code.includes('<!DOCTYPE html>') || code.includes('<html'));
-            
-            if (existing && !isFullHtml) {
-              fileMap.set(filename, {
-                ...existing,
-                code: existing.code + '\n' + code,
-              });
-            } else {
-              fileMap.set(filename, {
-                id: `file_${filename}_${Date.now()}`,
-                filename,
-                language: lang,
-                code,
-              });
-            }
-          }
-        }
-      }
-    });
-
-    setGeneratedFiles(Array.from(fileMap.values()));
   };
 
   const extractArtifactFromContent = (content: string): CodeArtifact | null => {
