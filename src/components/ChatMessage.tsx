@@ -385,10 +385,20 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                           </div>
                         </div>
 
-                        {/* Code Content */}
-                        <pre className="p-3 overflow-x-auto text-[13px] font-mono text-gray-200 leading-relaxed">
-                          <code>{children}</code>
-                        </pre>
+                        {/* Code Content (Capped at 256px height to prevent infinite page scroll) */}
+                        {isStreaming && isLastAssistant ? (
+                          <div className="p-3 bg-[#18181c] flex items-center justify-between text-xs font-mono text-gray-400">
+                            <div className="flex items-center gap-2 text-cyan-400">
+                              <FileCode className="w-4 h-4 animate-pulse" />
+                              <span className="font-semibold">Menulis Kode {lang.toUpperCase()}...</span>
+                            </div>
+                            <span className="text-[11px] text-gray-500 font-mono">Disembunyikan saat memproses</span>
+                          </div>
+                        ) : (
+                          <pre className="p-3 max-h-64 overflow-y-auto overflow-x-auto text-[13px] font-mono text-gray-200 leading-relaxed scrollbar-thin">
+                            <code>{children}</code>
+                          </pre>
+                        )}
                       </div>
                     );
                   }

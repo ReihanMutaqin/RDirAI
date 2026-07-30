@@ -407,7 +407,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             })}
 
             {/* High Visibility Animated Processing Card with Embedded Phase Execution Tracker */}
-            {isLoading && (
+            {isLoading && activeSkill !== 'hyper' && (
               <div className="py-5 px-4 md:px-6 bg-white/90 border-y border-gray-200 shadow-sm">
                 <div className="max-w-4xl mx-auto space-y-4">
                   <div className="flex items-center justify-between">
