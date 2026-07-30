@@ -109,6 +109,18 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   const createdFiles = getCreatedFiles(message.content);
   const isTruncated = !isUser && checkIsTruncated(message.content);
 
+  // Check if content is currently streaming an incomplete Pollinations image Markdown
+  const hasPollinations = message.content.includes('image.pollinations.ai');
+  const isImageStreaming = hasPollinations && (!message.content.includes(')') || message.content.endsWith('(') || message.content.endsWith('%20'));
+
+  // Clean up content for display so raw unparsed URL text doesn't show during stream
+  let displayContent = message.content;
+  if (hasPollinations) {
+    if (isImageStreaming) {
+      displayContent = displayContent.replace(/!\[.*?\]\(https:\/\/image\.pollinations\.ai\/[^\)]*/g, '').trim();
+    }
+  }
+
   return (
     <div
       className={`py-5 px-4 md:px-6 transition-all duration-200 ease-out ${
@@ -170,13 +182,20 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             </div>
           )}
 
-
+          {/* Streaming Image Skeleton Placeholder */}
+          {isImageStreaming && (
+            <div className="w-full max-w-md h-64 rounded-xl bg-gradient-to-r from-purple-50 via-purple-100 to-purple-50 animate-pulse border border-purple-200 flex flex-col items-center justify-center gap-3 my-4 text-purple-600 shadow-sm">
+              <ImageIcon className="w-8 h-8 animate-bounce text-purple-500" />
+              <span className="text-xs font-semibold font-mono tracking-wide">Merender Gambar FLUX HD...</span>
+            </div>
+          )}
 
           {/* Markdown Content */}
-          <div className="prose max-w-none text-sm leading-relaxed text-gray-700 transition-opacity duration-150">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm, remarkMath]}
-              rehypePlugins={[rehypeHighlight, rehypeKatex]}
+          {displayContent && (
+            <div className="prose max-w-none text-sm leading-relaxed text-gray-700 transition-opacity duration-150">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[rehypeHighlight, rehypeKatex]}
               components={{
                 h3: ({node, ...props}: any) => <h3 className="text-[15px] font-semibold text-gray-800 mt-6 mb-2" {...props} />,
                 h4: ({node, ...props}: any) => <h4 className="text-[14px] font-semibold text-gray-700 mt-5 mb-2" {...props} />,
@@ -280,6 +299,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
               {message.content}
             </ReactMarkdown>
           </div>
+          )}
 
           {/* Kimi-style Interactive File Cards inside message bubble */}
           {createdFiles.length > 0 && (
