@@ -492,8 +492,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             )}
 
             {/* Quick Language Selector Header */}
-            <div className="px-4 py-2 border-b border-gray-100 flex items-center justify-between text-[11px] text-gray-500 font-mono bg-gray-50/50 rounded-t-2xl">
-              <div className="flex items-center gap-2">
+            <div className="px-3 md:px-4 py-2 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2 text-[11px] text-gray-500 font-mono bg-gray-50/50 rounded-t-2xl">
+              <div className="hidden sm:flex items-center gap-1.5 md:gap-2">
                 <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-100">
                   HTML5
                 </span>

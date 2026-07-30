@@ -278,10 +278,10 @@ export const LiveView: React.FC<LiveViewProps> = ({ artifact, allFiles = [], onC
 
   return (
     <div
-      className={`bg-gray-50 border-l border-gray-200 p-2 lg:p-4 flex flex-col transition-all duration-300 z-20 ${
+      className={`bg-gray-50 border-l border-gray-200 p-2 lg:p-4 flex flex-col transition-all duration-300 z-30 ${
         isFullscreen
           ? 'fixed inset-0 z-50 w-screen h-screen p-0'
-          : 'w-full md:w-[50vw] lg:w-[45vw] h-full'
+          : 'fixed inset-0 md:static z-40 md:z-20 w-full md:w-[50vw] lg:w-[45vw] h-full'
       }`}
     >
       <div className="flex-1 flex flex-col rounded-xl overflow-hidden bg-[#1e1e24] shadow-xl border border-gray-800/50">
