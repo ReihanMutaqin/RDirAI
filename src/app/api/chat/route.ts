@@ -145,7 +145,7 @@ export async function POST(request: Request) {
 
             const fullMessages = isImageMode 
               ? [
-                  { role: 'system', content: `PENTING: Pengguna mengaktifkan MODE GAMBAR. Balas HANYA dengan sintaks Markdown Gambar menggunakan URL Pollinations AI:\n![Deskripsi Gambar](https://image.pollinations.ai/prompt/[prompt_bahasa_inggris]?width=1920&height=1080&nologo=true&model=flux)\nGanti spasi pada prompt dengan %20. DILARANG menuliskan hal lain, kode, atau penjelasan.` },
+                  { role: 'system', content: `PENTING: Pengguna mengaktifkan MODE GAMBAR. Tugas Anda adalah menjadi PROMPT ENGINEER. Terjemahkan permintaan pengguna ke Bahasa Inggris dan kembangkan menjadi deskripsi visual yang SANGAT DETAIL, ESTETIK, HIGH QUALITY, dan PROFESIONAL (sebutkan pencahayaan, gaya seni, warna, resolusi 8k, dll).\n\nSetelah itu, Balas HANYA dengan sintaks Markdown Gambar menggunakan URL Pollinations AI:\n![Deskripsi Gambar](https://image.pollinations.ai/prompt/[prompt_inggris_yang_sudah_diperkaya]?width=1920&height=1080&nologo=true&model=flux)\n\nGanti spasi pada prompt dengan %20. DILARANG menuliskan hal lain, teks sapaan, atau penjelasan apapun!` },
                   ...messages.map((m: any) => ({ role: m.role, content: m.content })).slice(-1)
                 ]
               : [
