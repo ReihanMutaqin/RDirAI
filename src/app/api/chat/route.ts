@@ -212,8 +212,15 @@ export async function POST(request: Request) {
 
             let res;
             if (targetUrl) {
-              res = await fetch(`https://api.you.com/v1/contents?urls=${encodeURIComponent(targetUrl)}`, {
-                headers: { 'X-API-Key': ydcApiKey }
+              res = await fetch('https://api.you.com/v1/contents', {
+                method: 'POST',
+                headers: {
+                  'X-API-Key': ydcApiKey,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  urls: [targetUrl],
+                }),
               });
             } else {
               res = await fetch(`https://api.you.com/v1/search?query=${encodeURIComponent(lastUserMessage.content)}`, {
