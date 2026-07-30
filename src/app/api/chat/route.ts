@@ -274,12 +274,33 @@ export async function POST(request: Request) {
                     .trim()
                     .substring(0, 6000);
 
-                  if (cleanText && cleanText.length > 20) {
+                  if (cleanText && cleanText.length > 20 && !cleanText.toLowerCase().includes('requires javascript')) {
                     extractedText = `### 📄 Ekstraksi Konten Web (${targetUrl}):\n\n${cleanText}`;
                   }
                 }
               } catch (directErr) {
                 console.error('Direct Scraper Fallback failed:', directErr);
+              }
+            }
+
+            // Step C: You.com Search Index Fallback (For JS-challenge protected sites like 42web.io)
+            if ((!extractedText || extractedText.toLowerCase().includes('requires javascript')) && targetUrl && ydcApiKey) {
+              try {
+                const searchRes = await fetch(`https://api.you.com/v1/search?query=${encodeURIComponent(targetUrl)}`, {
+                  headers: { 'X-API-Key': ydcApiKey }
+                });
+                if (searchRes.ok) {
+                  const searchData = await searchRes.json();
+                  if (searchData.hits && searchData.hits.length > 0) {
+                    let searchMarkdown = `### 📄 Ekstraksi Konten Web (Terindeks):\n\n`;
+                    searchData.hits.forEach((hit: any) => {
+                      searchMarkdown += `#### 🌐 [${hit.title}](${hit.url})\n${hit.snippets?.join('\n\n') || ''}\n\n`;
+                    });
+                    extractedText = searchMarkdown;
+                  }
+                }
+              } catch (searchErr) {
+                console.error('Step C Search Fallback failed:', searchErr);
               }
             }
 
