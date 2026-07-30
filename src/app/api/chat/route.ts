@@ -122,6 +122,7 @@ async function fetchCompletionWithFallback(
 ): Promise<Response> {
   const modelsToTry = Array.from(new Set([
     model,
+    'inclusionai/ling-3.0-flash:free',
     'google/gemini-2.0-flash-exp:free',
     'meta-llama/llama-3.3-70b-instruct:free',
     'qwen/qwen-2.5-coder-32b-instruct:free',
