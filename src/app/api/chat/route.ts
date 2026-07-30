@@ -114,7 +114,7 @@ export async function POST(request: Request) {
             if (!response.ok) throw new Error(`You.com API error: ${await response.text()}`);
 
             const data = await response.json();
-            const content = data.answer || data.text || data.response || (data.result && typeof data.result === 'string' ? data.result : "Maaf, tidak ada jawaban khusus teks dari You.com.");
+            const content = data.output?.content || data.answer || data.text || data.response || "Maaf, tidak ada jawaban khusus teks dari You.com.";
             
             accumulatedContent = content;
             controller.enqueue(encoder.encode(content));
