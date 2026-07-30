@@ -403,6 +403,92 @@ export async function POST(request: Request) {
               accumulatedContent += rawResultText;
               controller.enqueue(encoder.encode(rawResultText));
             }
+          }
+          // 5. SKILL: MODE HYPER (Fusi You.com Real-time Search + Ling 3.0 Flash Engine)
+          else if (searchMode === 'hyper') {
+            if (!ydcApiKey) throw new Error("YDC_API_KEY is missing in .env");
+            if (!orApiKey) throw new Error("OPENROUTER_API_KEY is missing in .env");
+
+            const hyperNotice = "> ⚡ *MODE HYPER AKTIF: Menggabungkan You.com Real-time Web Intelligence + Ling 3.0 Flash Engine...*\n\n";
+            accumulatedContent += hyperNotice;
+            controller.enqueue(encoder.encode(hyperNotice));
+
+            // Step 1: Fetch live real-time web knowledge from You.com
+            let liveWebData = "";
+            try {
+              const res = await fetch(`https://api.you.com/v1/search?query=${encodeURIComponent(lastUserMessage.content)}`, {
+                headers: { 'X-API-Key': ydcApiKey }
+              });
+              if (res.ok) {
+                const data = await res.json();
+                if (data.hits && data.hits.length > 0) {
+                  data.hits.slice(0, 5).forEach((hit: any) => {
+                    liveWebData += `[Sumber Web: ${hit.title}] (${hit.url})\n${hit.snippets?.join(' ') || ''}\n\n`;
+                  });
+                } else {
+                  liveWebData = data.answer || "";
+                }
+              }
+            } catch (e) {
+              console.error('Hyper mode web search failed:', e);
+            }
+
+            // Step 2: Inject live web data into Ling 3.0 Flash System Prompt!
+            const hyperSystemPrompt = `${SYSTEM_PROMPT}\n\n[DATA INTERNET REAL-TIME TERBARU UNTUK PERTANYAAN PENGGUNA]:\n${liveWebData || 'Tidak ada data web tambahan.'}\n\nGunakan data internet real-time di atas untuk menjawab atau membuatkan kode aplikasi web yang up-to-date dan akurat!`;
+
+            const fullMessages = [
+              { role: 'system', content: hyperSystemPrompt },
+              ...messages.map((m: any) => ({ role: m.role, content: m.content }))
+            ];
+
+            const targetModel = selectedModel && !selectedModel.toLowerCase().includes('you')
+              ? selectedModel
+              : (process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'inclusionai/ling-3.0-flash:free');
+
+            // Step 3: Stream Ling 3.0 Flash with live internet powers!
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${orApiKey}`,
+                'HTTP-Referer': 'https://rdirai.vercel.app',
+                'X-Title': 'RdirAI Workspace',
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: targetModel,
+                messages: fullMessages,
+                stream: true,
+              }),
+            });
+
+            if (!response.ok) throw new Error(`OpenRouter Hyper Mode Error: ${await response.text()}`);
+            const reader = response.body?.getReader();
+            if (reader) {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split('\n');
+
+                for (const line of lines) {
+                  const trimmed = line.trim();
+                  if (trimmed.startsWith('data: ')) {
+                    const dataStr = trimmed.replace('data: ', '');
+                    if (dataStr === '[DONE]') continue;
+
+                    try {
+                      const json = JSON.parse(dataStr);
+                      const content = json.choices?.[0]?.delta?.content || '';
+                      if (content) {
+                        accumulatedContent += content;
+                        controller.enqueue(encoder.encode(content));
+                      }
+                    } catch (e) {}
+                  }
+                }
+              }
+            }
           } else {
             // OPENROUTER LOGIC
             if (!orApiKey) throw new Error("OPENROUTER_API_KEY is missing in .env");

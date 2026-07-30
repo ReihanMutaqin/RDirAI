@@ -36,8 +36,8 @@ interface ChatInterfaceProps {
   isLoading: boolean;
   selectedModel: string;
   onSelectModel: (modelId: string) => void;
-  activeSkill: 'none' | 'web_search' | 'deep_research' | 'finance' | 'contents' | 'image';
-  setActiveSkill: (skill: 'none' | 'web_search' | 'deep_research' | 'finance' | 'contents' | 'image') => void;
+  activeSkill: 'none' | 'web_search' | 'deep_research' | 'finance' | 'contents' | 'hyper' | 'image';
+  setActiveSkill: (skill: 'none' | 'web_search' | 'deep_research' | 'finance' | 'contents' | 'hyper' | 'image') => void;
   onSendMessage: (text: string, attachments?: AttachedFile[]) => void;
   onContinueGeneration: () => void;
   onStopStream: () => void;
@@ -582,6 +582,25 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   Baca Link
                   <div className={`ml-1 w-5 h-3 rounded-full relative transition-colors ${activeSkill === 'contents' ? 'bg-amber-500' : 'bg-gray-300'}`}>
                     <div className={`absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all shadow-sm ${activeSkill === 'contents' ? 'left-[10px]' : 'left-0.5'}`}></div>
+                  </div>
+                </button>
+
+                {/* 5. Mode Hyper (Fusi Real-time You.com + Ling Engine) */}
+                <button
+                  type="button"
+                  onClick={() => setActiveSkill(activeSkill === 'hyper' ? 'none' : 'hyper')}
+                  disabled={messages.length > 0}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-semibold transition-all border ${
+                    activeSkill === 'hyper'
+                      ? 'bg-gradient-to-r from-amber-500 to-red-500 text-white border-amber-600 shadow-sm shadow-amber-200' 
+                      : 'bg-white border-amber-300 text-amber-700 hover:bg-amber-50'
+                  } ${messages.length > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title="⚡ MODE HYPER: Gabungkan Pengetahuan Real-Time Internet You.com dengan Kekuatan Pemrograman Ling 3.0 Flash"
+                >
+                  <Zap className={`w-3.5 h-3.5 ${activeSkill === 'hyper' ? 'text-yellow-200 animate-bounce' : 'text-amber-500'}`} />
+                  Mode Hyper
+                  <div className={`ml-1 w-5 h-3 rounded-full relative transition-colors ${activeSkill === 'hyper' ? 'bg-amber-900/40' : 'bg-amber-200'}`}>
+                    <div className={`absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all shadow-sm ${activeSkill === 'hyper' ? 'left-[10px]' : 'left-0.5'}`}></div>
                   </div>
                 </button>
 
