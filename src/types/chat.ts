@@ -74,6 +74,13 @@ export const OPENROUTER_MODELS: ModelOption[] = [
     badge: 'Default (Fastest)',
   },
   {
+    id: 'you-rag',
+    name: 'You.com AI Search',
+    provider: 'You.com',
+    description: 'Model riset cerdas yang melakukan penelusuran web real-time (Real-time Web Search).',
+    badge: 'Live Data',
+  },
+  {
     id: 'nvidia/nemotron-3-ultra-550b-a55b:free',
     name: 'Nemotron-3 Ultra 550B',
     provider: 'NVIDIA',
