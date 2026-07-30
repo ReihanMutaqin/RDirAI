@@ -24,10 +24,7 @@ export async function GET(request: Request) {
     if (conversationId) {
       // Fetch messages for a specific conversation
       const [messages]: any = await pool.query(
-        `SELECT m.* FROM messages m 
-         INNER JOIN conversations c ON m.conversation_id = c.id 
-         WHERE m.conversation_id = ? 
-         ORDER BY m.created_at ASC`,
+        `SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC`,
         [conversationId]
       );
       return NextResponse.json({ messages });

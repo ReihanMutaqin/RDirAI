@@ -589,8 +589,6 @@ PENTING: Ganti seluruh spasi pada prompt dengan %20. DILARANG keras menulis teks
           accumulatedContent = errorMsg;
           controller.enqueue(encoder.encode(errorMsg));
         } finally {
-          controller.close();
-
           if (accumulatedContent && currentConvId) {
             const assistantMsgId = `msg_a_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
             try {
@@ -606,6 +604,7 @@ PENTING: Ganti seluruh spasi pada prompt dengan %20. DILARANG keras menulis teks
               console.error('Failed to save assistant message to TiDB:', err);
             }
           }
+          controller.close();
         }
       },
     });
