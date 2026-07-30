@@ -159,7 +159,10 @@ export default function Home() {
 
           if (code) {
             const existing = fileMap.get(filename);
-            if (existing) {
+            // If the code is a full HTML document (rewrite), we MUST replace it entirely to prevent duplicate <html> tags
+            const isFullHtml = lang === 'html' && (code.includes('<!DOCTYPE html>') || code.includes('<html'));
+            
+            if (existing && !isFullHtml) {
               fileMap.set(filename, {
                 ...existing,
                 code: existing.code + '\n' + code,
