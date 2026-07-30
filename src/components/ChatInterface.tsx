@@ -36,8 +36,8 @@ interface ChatInterfaceProps {
   isLoading: boolean;
   selectedModel: string;
   onSelectModel: (modelId: string) => void;
-  activeSkill: 'none' | 'web_search' | 'deep_research' | 'finance' | 'image';
-  setActiveSkill: (skill: 'none' | 'web_search' | 'deep_research' | 'finance' | 'image') => void;
+  activeSkill: 'none' | 'web_search' | 'deep_research' | 'finance' | 'contents' | 'image';
+  setActiveSkill: (skill: 'none' | 'web_search' | 'deep_research' | 'finance' | 'contents' | 'image') => void;
   onSendMessage: (text: string, attachments?: AttachedFile[]) => void;
   onContinueGeneration: () => void;
   onStopStream: () => void;
@@ -563,6 +563,25 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   Finansial
                   <div className={`ml-1 w-5 h-3 rounded-full relative transition-colors ${activeSkill === 'finance' ? 'bg-emerald-500' : 'bg-gray-300'}`}>
                     <div className={`absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all shadow-sm ${activeSkill === 'finance' ? 'left-[10px]' : 'left-0.5'}`}></div>
+                  </div>
+                </button>
+
+                {/* 4. Baca Link (Contents API) */}
+                <button
+                  type="button"
+                  onClick={() => setActiveSkill(activeSkill === 'contents' ? 'none' : 'contents')}
+                  disabled={messages.length > 0}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-semibold transition-colors border ${
+                    activeSkill === 'contents'
+                      ? 'bg-amber-50 border-amber-200 text-amber-700' 
+                      : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                  } ${messages.length > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title="Membaca & Ekstraksi Isi Penuh Halaman Web dari Link URL"
+                >
+                  <FileText className={`w-3.5 h-3.5 ${activeSkill === 'contents' ? 'text-amber-600' : 'text-gray-400'}`} />
+                  Baca Link
+                  <div className={`ml-1 w-5 h-3 rounded-full relative transition-colors ${activeSkill === 'contents' ? 'bg-amber-500' : 'bg-gray-300'}`}>
+                    <div className={`absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all shadow-sm ${activeSkill === 'contents' ? 'left-[10px]' : 'left-0.5'}`}></div>
                   </div>
                 </button>
 

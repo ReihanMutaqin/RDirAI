@@ -17,7 +17,7 @@ export default function Home() {
   const [selectedModel, setSelectedModel] = useState<string>(
     process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'inclusionai/ling-3.0-flash:free'
   );
-  const [activeSkill, setActiveSkill] = useState<'none' | 'web_search' | 'deep_research' | 'finance' | 'image'>('none');
+  const [activeSkill, setActiveSkill] = useState<'none' | 'web_search' | 'deep_research' | 'finance' | 'contents' | 'image'>('none');
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeArtifact, setActiveArtifact] = useState<CodeArtifact | null>(null);

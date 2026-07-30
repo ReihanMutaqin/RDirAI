@@ -198,6 +198,52 @@ export async function POST(request: Request) {
               controller.enqueue(encoder.encode(chunk));
               await new Promise(r => setTimeout(r, 8));
             }
+          }
+          // 4. SKILL: BACA CONTENTS LINK URL (/v1/contents)
+          else if (searchMode === 'contents') {
+            if (!ydcApiKey) throw new Error("YDC_API_KEY is missing in .env");
+            
+            const contentsNotice = "> 📄 *Membaca & mengekstrak konten penuh dari link web...*\n\n";
+            accumulatedContent += contentsNotice;
+            controller.enqueue(encoder.encode(contentsNotice));
+
+            const urlMatch = lastUserMessage.content.match(/(https?:\/\/[^\s]+)/i);
+            const targetUrl = urlMatch ? urlMatch[0] : null;
+
+            let res;
+            if (targetUrl) {
+              res = await fetch(`https://api.you.com/v1/contents?urls=${encodeURIComponent(targetUrl)}`, {
+                headers: { 'X-API-Key': ydcApiKey }
+              });
+            } else {
+              res = await fetch(`https://api.you.com/v1/search?query=${encodeURIComponent(lastUserMessage.content)}`, {
+                headers: { 'X-API-Key': ydcApiKey }
+              });
+            }
+
+            if (!res.ok) throw new Error(`You.com Contents API error: ${await res.text()}`);
+            const data = await res.json();
+            
+            let resultMarkdown = "### 📄 Ekstraksi Konten Halaman Web:\n\n";
+            if (data.contents && data.contents.length > 0) {
+              data.contents.forEach((item: any) => {
+                resultMarkdown += `## [${item.title || 'Halaman Web'}](${item.url || targetUrl})\n\n${item.markdown || item.text || item.content}\n\n`;
+              });
+            } else if (data.hits && data.hits.length > 0) {
+              data.hits.forEach((hit: any) => {
+                resultMarkdown += `## [${hit.title}](${hit.url})\n\n${hit.snippets?.join('\n\n')}\n\n`;
+              });
+            } else {
+              resultMarkdown += data.output?.content || data.answer || "Tidak dapat membaca konten dari link tersebut.";
+            }
+
+            const chunkSize = 8;
+            for (let i = 0; i < resultMarkdown.length; i += chunkSize) {
+              const chunk = resultMarkdown.slice(i, i + chunkSize);
+              accumulatedContent += chunk;
+              controller.enqueue(encoder.encode(chunk));
+              await new Promise(r => setTimeout(r, 6));
+            }
           } else {
             // OPENROUTER LOGIC
             if (!orApiKey) throw new Error("OPENROUTER_API_KEY is missing in .env");
