@@ -17,6 +17,7 @@ export default function Home() {
   const [selectedModel, setSelectedModel] = useState<string>(
     process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'inclusionai/ling-3.0-flash:free'
   );
+  const [isWebSearchActive, setIsWebSearchActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeArtifact, setActiveArtifact] = useState<CodeArtifact | null>(null);
@@ -253,14 +254,15 @@ export default function Home() {
     setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
 
-    const initialPhases = createPhasesForPrompt(text, selectedModel);
+    const activeModel = isWebSearchActive ? 'you-rag' : selectedModel;
+    const initialPhases = createPhasesForPrompt(text, activeModel);
 
     const assistantMsgId = `msg_a_${Date.now()}`;
     const initialAssistantMsg: Message = {
       id: assistantMsgId,
       role: 'assistant',
       content: '',
-      model: selectedModel,
+      model: activeModel,
       created_at: new Date().toISOString(),
       phases: initialPhases,
     };
@@ -277,7 +279,7 @@ export default function Home() {
         body: JSON.stringify({
           conversationId: activeConvId,
           messages: newMessages,
-          model: selectedModel,
+          model: activeModel,
         }),
         signal: controller.signal,
       });
@@ -420,6 +422,8 @@ export default function Home() {
           isLoading={isLoading}
           selectedModel={selectedModel}
           onSelectModel={setSelectedModel}
+          isWebSearchActive={isWebSearchActive}
+          setIsWebSearchActive={setIsWebSearchActive}
           onSendMessage={handleSendMessage}
           onContinueGeneration={handleContinueGeneration}
           onStopStream={handleStopStream}

@@ -24,6 +24,7 @@ import {
   Loader2,
   PlayCircle,
   Folder,
+  Globe,
 } from 'lucide-react';
 
 interface ChatInterfaceProps {
@@ -32,6 +33,8 @@ interface ChatInterfaceProps {
   isLoading: boolean;
   selectedModel: string;
   onSelectModel: (modelId: string) => void;
+  isWebSearchActive: boolean;
+  setIsWebSearchActive: (active: boolean) => void;
   onSendMessage: (text: string, attachments?: AttachedFile[]) => void;
   onContinueGeneration: () => void;
   onStopStream: () => void;
@@ -48,6 +51,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   isLoading,
   selectedModel,
   onSelectModel,
+  isWebSearchActive,
+  setIsWebSearchActive,
   onSendMessage,
   onContinueGeneration,
   onStopStream,
@@ -501,13 +506,31 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 </span>
               </div>
               <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsWebSearchActive(!isWebSearchActive)}
+                  disabled={messages.length > 0}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors border ${
+                    isWebSearchActive 
+                      ? 'bg-blue-50 border-blue-200 text-blue-700' 
+                      : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                  } ${messages.length > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  title="Aktifkan Skill Pencarian Web (Real-time Web Search)"
+                >
+                  <Globe className={`w-3.5 h-3.5 ${isWebSearchActive ? 'text-blue-600' : 'text-gray-400'}`} />
+                  Web Search
+                  <div className={`ml-1 w-6 h-3.5 rounded-full relative transition-colors ${isWebSearchActive ? 'bg-blue-500' : 'bg-gray-300'}`}>
+                    <div className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-all shadow-sm ${isWebSearchActive ? 'left-[14px]' : 'left-0.5'}`}></div>
+                  </div>
+                </button>
+
                 <select 
                   value={selectedModel}
                   onChange={(e) => onSelectModel(e.target.value)}
-                  disabled={messages.length > 0}
-                  title={messages.length > 0 ? "Model tidak bisa diubah di tengah sesi untuk menjaga konteks percakapan" : "Pilih model AI"}
+                  disabled={messages.length > 0 || isWebSearchActive}
+                  title={messages.length > 0 ? "Model tidak bisa diubah di tengah sesi" : isWebSearchActive ? "Model dikunci saat Skill Web Search aktif" : "Pilih model AI"}
                   className={`bg-white border border-gray-200 text-[11px] rounded px-2 py-1 outline-none font-sans transition-colors ${
-                    messages.length > 0 
+                    messages.length > 0 || isWebSearchActive
                       ? 'opacity-75 cursor-not-allowed bg-gray-100 text-gray-500' 
                       : 'text-gray-700 focus:border-blue-400 cursor-pointer'
                   }`}
