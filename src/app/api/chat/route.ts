@@ -53,6 +53,25 @@ Sertakan nama file di atas blok kode persis seperti contoh berikut:
 
 Berikan jawaban yang sangat jelas, ramah, dan profesional.
 `;
+function extractHitsFromYouData(data: any): any[] {
+  if (!data) return [];
+  const rawList: any[] = [
+    ...(Array.isArray(data.hits) ? data.hits : []),
+    ...(Array.isArray(data.news?.results) ? data.news.results : (Array.isArray(data.news) ? data.news : [])),
+    ...(Array.isArray(data.web?.results) ? data.web.results : (Array.isArray(data.web) ? data.web : [])),
+    ...(Array.isArray(data.results) ? data.results : [])
+  ];
+
+  const map = new Map<string, any>();
+  rawList.forEach((item) => {
+    if (item && (item.title || item.url)) {
+      const key = item.url || item.title;
+      if (!map.has(key)) map.set(key, item);
+    }
+  });
+
+  return Array.from(map.values());
+}
 
 async function streamFormattedDataWithLLM(
   rawSearchData: string,
@@ -216,26 +235,6 @@ export async function POST(request: Request) {
             const searchNotice = "> 🔍 *Mencari informasi di web secara instan...*\n\n";
             accumulatedContent += searchNotice;
             controller.enqueue(encoder.encode(searchNotice));
-
-function extractHitsFromYouData(data: any): any[] {
-  if (!data) return [];
-  const rawList: any[] = [
-    ...(Array.isArray(data.hits) ? data.hits : []),
-    ...(Array.isArray(data.news?.results) ? data.news.results : (Array.isArray(data.news) ? data.news : [])),
-    ...(Array.isArray(data.web?.results) ? data.web.results : (Array.isArray(data.web) ? data.web : [])),
-    ...(Array.isArray(data.results) ? data.results : [])
-  ];
-
-  const map = new Map<string, any>();
-  rawList.forEach((item) => {
-    if (item && (item.title || item.url)) {
-      const key = item.url || item.title;
-      if (!map.has(key)) map.set(key, item);
-    }
-  });
-
-  return Array.from(map.values());
-}
 
             const res = await fetch(`https://api.you.com/v1/search?query=${encodeURIComponent(lastUserMessage.content)}&country=ID&livecrawl=all&livecrawl_formats=markdown&crawl_timeout=30`, {
               headers: { 'X-API-Key': ydcApiKey }
