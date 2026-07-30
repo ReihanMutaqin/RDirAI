@@ -422,7 +422,7 @@ export async function POST(request: Request) {
             if (!ydcApiKey) throw new Error("YDC_API_KEY is missing in .env");
             if (!orApiKey) throw new Error("OPENROUTER_API_KEY is missing in .env");
 
-            const hyperNotice = "> ⚡ *MODE HYPER AKTIF: Menggabungkan You.com Real-time Web Intelligence + Ling 3.0 Flash Engine...*\n\n";
+            const hyperNotice = "> ⚡ *MODE HYPER AKTIF...*\n\n";
             accumulatedContent += hyperNotice;
             controller.enqueue(encoder.encode(hyperNotice));
 
