@@ -398,6 +398,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   key={msg.id}
                   message={msg}
                   isLastAssistant={isLastAssistant}
+                  isStreaming={isLoading && isLastAssistant}
                   onOpenArtifact={onOpenArtifact}
                   onOpenAllFiles={() => setIsAllFilesDrawerOpen(true)}
                   onContinueGeneration={onContinueGeneration}

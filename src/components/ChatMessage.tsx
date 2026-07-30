@@ -9,7 +9,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeKatex from 'rehype-katex';
-import { User, Terminal, Copy, Check, Play, FileText, Image as ImageIcon, FileCode, PlayCircle, Download } from 'lucide-react';
+import { User, Terminal, Copy, Check, Play, FileText, Image as ImageIcon, FileCode, PlayCircle, Download, Clock, Coins, ChevronDown, Zap } from 'lucide-react';
 
 import 'katex/dist/katex.min.css';
 
@@ -18,10 +18,68 @@ import { ChartWidget } from './ChartWidget';
 interface ChatMessageProps {
   message: Message;
   isLastAssistant?: boolean;
+  isStreaming?: boolean;
   onOpenArtifact?: (artifact: CodeArtifact) => void;
   onOpenAllFiles?: () => void;
   onContinueGeneration?: () => void;
 }
+
+const HyperThinkingCard: React.FC<{
+  content: string;
+  isStreaming?: boolean;
+}> = ({ content, isStreaming }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [seconds, setSeconds] = useState(0);
+
+  React.useEffect(() => {
+    let timer: any;
+    if (isStreaming) {
+      timer = setInterval(() => {
+        setSeconds((prev) => prev + 0.1);
+      }, 100);
+    }
+    return () => clearInterval(timer);
+  }, [isStreaming]);
+
+  const tokenCount = Math.max(12, Math.round(content.length / 3.6));
+  const timeDisplay = isStreaming ? seconds.toFixed(1) : Math.max(1.2, content.length / 55).toFixed(1);
+
+  return (
+    <div className="my-2.5 rounded-xl border border-amber-200/80 bg-gradient-to-r from-amber-50/90 via-amber-50/40 to-white shadow-sm overflow-hidden transition-all duration-200">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full px-3.5 py-2 flex items-center justify-between text-xs font-mono font-medium text-amber-900 hover:bg-amber-100/40 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <Zap className={`w-4 h-4 text-amber-500 ${isStreaming ? 'animate-bounce' : ''}`} />
+          <span className="font-bold text-amber-950 tracking-tight">
+            {isStreaming ? '⚡ Mode Hyper Berpikir...' : '⚡ Mode Hyper Process Log'}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2.5">
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100/90 border border-amber-200 text-amber-900 text-[11px] font-semibold">
+            <Clock className={`w-3 h-3 ${isStreaming ? 'animate-spin text-amber-600' : 'text-amber-500'}`} />
+            {timeDisplay}s
+          </span>
+
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100/90 border border-amber-200 text-amber-900 text-[11px] font-semibold">
+            <Coins className="w-3 h-3 text-amber-600" />
+            ~{tokenCount} Tokens
+          </span>
+
+          <ChevronDown className={`w-3.5 h-3.5 text-amber-600 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+        </div>
+      </button>
+
+      {isExpanded && (
+        <div className="p-3 bg-slate-900 text-slate-200 font-mono text-[11px] leading-relaxed border-t border-amber-200/60 max-h-52 overflow-y-auto whitespace-pre-wrap">
+          {content}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({
   message,
@@ -123,6 +181,15 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     }
   }
 
+  const isHyperMode = !isUser && (message.content.includes('MODE HYPER') || message.content.startsWith('> ⚡'));
+  let mainBodyContent = displayContent;
+  if (isHyperMode && displayContent.startsWith('> ⚡ *MODE HYPER AKTIF...*\n\n')) {
+    mainBodyContent = displayContent.replace('> ⚡ *MODE HYPER AKTIF...*\n\n', '');
+  }
+
+  // During active code generation stream in Hyper mode, hide raw code text to keep UI minimized like Claude
+  const isCodeStreaming = isStreaming && isLastAssistant && createdFiles.length > 0;
+
   return (
     <div
       className={`py-5 px-4 md:px-6 transition-all duration-200 ease-out ${
@@ -192,13 +259,21 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             </div>
           )}
 
-          {/* Markdown Content */}
-          {displayContent && (
+          {/* Claude-style Minimized Thinking Process Card for Hyper Mode */}
+          {isHyperMode && (
+            <HyperThinkingCard
+              content={displayContent}
+              isStreaming={isLastAssistant && isStreaming}
+            />
+          )}
+
+          {/* Markdown Content (Hidden while raw code is streaming in Hyper Mode to keep UI minimized like Claude) */}
+          {mainBodyContent && !isCodeStreaming && (
             <div className="prose max-w-none text-sm leading-relaxed text-gray-700 transition-opacity duration-150">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[rehypeHighlight, rehypeKatex]}
-              components={{
+                components={{
                 table: ({ node, ...props }: any) => (
                   <div className="my-5 overflow-x-auto rounded-xl border border-blue-100 bg-gradient-to-b from-white to-blue-50/20 shadow-sm">
                     <table className="w-full text-left text-xs border-collapse" {...props} />
@@ -325,7 +400,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 },
               }}
             >
-              {message.content}
+              {mainBodyContent}
             </ReactMarkdown>
           </div>
           )}
