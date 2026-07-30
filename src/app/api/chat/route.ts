@@ -51,12 +51,9 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { conversationId, messages, model } = body;
 
-    const apiKey = process.env.OPENROUTER_API_KEY;
+    const orApiKey = process.env.OPENROUTER_API_KEY;
+    const ydcApiKey = process.env.YDC_API_KEY;
     const selectedModel = model || process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'inclusionai/ling-3.0-flash:free';
-
-    if (!apiKey) {
-      return NextResponse.json({ error: 'OPENROUTER_API_KEY is missing' }, { status: 500 });
-    }
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: 'Messages array is required' }, { status: 400 });
@@ -90,81 +87,105 @@ export async function POST(request: Request) {
       }
     }
 
-    const fullMessages = [
-      { role: 'system', content: SYSTEM_PROMPT },
-      ...messages.map((m: any) => ({
-        role: m.role,
-        content: m.content,
-      })),
-    ];
-
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': 'https://rdirai.vercel.app',
-        'X-Title': 'RdirAI Workspace',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: selectedModel,
-        messages: fullMessages,
-        stream: true,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenRouter error:', response.status, errorText);
-      return NextResponse.json(
-        { error: `OpenRouter API error (${response.status}): ${errorText}` },
-        { status: response.status }
-      );
-    }
-
+    const isYouModel = selectedModel.toLowerCase().includes('you');
     const encoder = new TextEncoder();
     const decoder = new TextDecoder();
     let accumulatedContent = '';
 
     const stream = new ReadableStream({
       async start(controller) {
-        const reader = response.body?.getReader();
-        if (!reader) {
-          controller.close();
-          return;
-        }
-
         try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
+          if (isYouModel) {
+            // YOU.COM LOGIC
+            if (!ydcApiKey) throw new Error("YDC_API_KEY is missing in .env");
+            
+            const response = await fetch('https://api.you.com/v1/research', {
+              method: 'POST',
+              headers: {
+                'X-API-Key': ydcApiKey,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                input: lastUserMessage.content,
+                research_effort: 'exhaustive',
+              }),
+            });
 
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n');
+            if (!response.ok) throw new Error(`You.com API error: ${await response.text()}`);
 
-            for (const line of lines) {
-              const trimmed = line.trim();
-              if (trimmed.startsWith('data: ')) {
-                const dataStr = trimmed.replace('data: ', '');
-                if (dataStr === '[DONE]') {
-                  continue;
-                }
+            const data = await response.json();
+            const content = data.answer || data.text || data.response || (data.result && typeof data.result === 'string' ? data.result : "Maaf, tidak ada jawaban khusus teks dari You.com.");
+            
+            accumulatedContent = content;
+            controller.enqueue(encoder.encode(content));
+            
+          } else {
+            // OPENROUTER LOGIC
+            if (!orApiKey) throw new Error("OPENROUTER_API_KEY is missing in .env");
 
-                try {
-                  const json = JSON.parse(dataStr);
-                  const content = json.choices?.[0]?.delta?.content || '';
-                  if (content) {
-                    accumulatedContent += content;
-                    controller.enqueue(encoder.encode(content));
+            const fullMessages = [
+              { role: 'system', content: SYSTEM_PROMPT },
+              ...messages.map((m: any) => ({
+                role: m.role,
+                content: m.content,
+              })),
+            ];
+
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${orApiKey}`,
+                'HTTP-Referer': 'https://rdirai.vercel.app',
+                'X-Title': 'RdirAI Workspace',
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: selectedModel,
+                messages: fullMessages,
+                stream: true,
+              }),
+            });
+
+            if (!response.ok) throw new Error(`OpenRouter API error: ${await response.text()}`);
+
+            const reader = response.body?.getReader();
+            if (!reader) {
+              controller.close();
+              return;
+            }
+
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+
+              const chunk = decoder.decode(value, { stream: true });
+              const lines = chunk.split('\n');
+
+              for (const line of lines) {
+                const trimmed = line.trim();
+                if (trimmed.startsWith('data: ')) {
+                  const dataStr = trimmed.replace('data: ', '');
+                  if (dataStr === '[DONE]') continue;
+
+                  try {
+                    const json = JSON.parse(dataStr);
+                    const content = json.choices?.[0]?.delta?.content || '';
+                    if (content) {
+                      accumulatedContent += content;
+                      controller.enqueue(encoder.encode(content));
+                    }
+                  } catch (e) {
+                    // Ignore parsing error for partial chunks
                   }
-                } catch (e) {
-                  // Ignore JSON parse errors
                 }
               }
             }
           }
-        } catch (error) {
-          console.error('Stream error:', error);
+        } catch (error: any) {
+          console.error('API/Stream error:', error);
+          const errorMsg = 'Error memproses respons AI: ' + error.message;
+          accumulatedContent = errorMsg;
+          controller.enqueue(encoder.encode(errorMsg));
         } finally {
           controller.close();
 
