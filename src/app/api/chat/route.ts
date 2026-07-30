@@ -217,16 +217,45 @@ export async function POST(request: Request) {
             accumulatedContent += searchNotice;
             controller.enqueue(encoder.encode(searchNotice));
 
-            const res = await fetch(`https://api.you.com/v1/search?query=${encodeURIComponent(lastUserMessage.content)}&livecrawl=all&livecrawl_formats=markdown&crawl_timeout=30`, {
+function extractHitsFromYouData(data: any): any[] {
+  if (!data) return [];
+  const rawList: any[] = [
+    ...(Array.isArray(data.hits) ? data.hits : []),
+    ...(Array.isArray(data.news?.results) ? data.news.results : (Array.isArray(data.news) ? data.news : [])),
+    ...(Array.isArray(data.web?.results) ? data.web.results : (Array.isArray(data.web) ? data.web : [])),
+    ...(Array.isArray(data.results) ? data.results : [])
+  ];
+
+  const map = new Map<string, any>();
+  rawList.forEach((item) => {
+    if (item && (item.title || item.url)) {
+      const key = item.url || item.title;
+      if (!map.has(key)) map.set(key, item);
+    }
+  });
+
+  return Array.from(map.values());
+}
+
+            const res = await fetch(`https://api.you.com/v1/search?query=${encodeURIComponent(lastUserMessage.content)}&country=ID&livecrawl=all&livecrawl_formats=markdown&crawl_timeout=30`, {
               headers: { 'X-API-Key': ydcApiKey }
             });
             if (!res.ok) throw new Error(`You.com Search API error: ${await res.text()}`);
             const data = await res.json();
             
             let rawResultMarkdown = "";
-            if (data.hits && data.hits.length > 0) {
-              data.hits.slice(0, 5).forEach((hit: any) => {
-                rawResultMarkdown += `#### 🌐 [${hit.title}](${hit.url})\n${hit.snippets?.join(' ') || ''}\n\n`;
+            const hits = extractHitsFromYouData(data);
+
+            if (hits.length > 0) {
+              hits.slice(0, 8).forEach((hit: any) => {
+                const snippetText = 
+                  (Array.isArray(hit.snippets) && hit.snippets.length > 0 ? hit.snippets.join(' ') : '') ||
+                  hit.snippet ||
+                  hit.description ||
+                  hit.content ||
+                  hit.text ||
+                  '';
+                rawResultMarkdown += `#### 🌐 [${hit.title || 'Berita Terkini'}](${hit.url || '#'})\n${snippetText}\n\n`;
               });
             } else {
               rawResultMarkdown = data.answer || "Tidak ada hasil instan spesifik dari pencarian.";
@@ -432,14 +461,22 @@ export async function POST(request: Request) {
             // Step 1: Fetch live real-time web knowledge from You.com
             let liveWebData = "";
             try {
-              const res = await fetch(`https://api.you.com/v1/search?query=${encodeURIComponent(lastUserMessage.content)}&livecrawl=all&livecrawl_formats=markdown&crawl_timeout=30`, {
+              const res = await fetch(`https://api.you.com/v1/search?query=${encodeURIComponent(lastUserMessage.content)}&country=ID&livecrawl=all&livecrawl_formats=markdown&crawl_timeout=30`, {
                 headers: { 'X-API-Key': ydcApiKey }
               });
               if (res.ok) {
                 const data = await res.json();
-                if (data.hits && data.hits.length > 0) {
-                  data.hits.slice(0, 5).forEach((hit: any) => {
-                    liveWebData += `[Sumber Web: ${hit.title}] (${hit.url})\n${hit.snippets?.join(' ') || ''}\n\n`;
+                const hits = extractHitsFromYouData(data);
+                if (hits.length > 0) {
+                  hits.slice(0, 8).forEach((hit: any) => {
+                    const snippetText = 
+                      (Array.isArray(hit.snippets) && hit.snippets.length > 0 ? hit.snippets.join(' ') : '') ||
+                      hit.snippet ||
+                      hit.description ||
+                      hit.content ||
+                      hit.text ||
+                      '';
+                    liveWebData += `[Sumber Web: ${hit.title || 'Berita Terkini'}] (${hit.url || '#'})\n${snippetText}\n\n`;
                   });
                 } else {
                   liveWebData = data.answer || "";
