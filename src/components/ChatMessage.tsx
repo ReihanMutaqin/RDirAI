@@ -9,7 +9,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeKatex from 'rehype-katex';
-import { User, Terminal, Copy, Check, Play, FileText, Image as ImageIcon, FileCode, PlayCircle, Download, Clock, Coins, ChevronDown, Zap } from 'lucide-react';
+import { User, Terminal, Copy, Check, Play, FileText, Image as ImageIcon, FileCode, PlayCircle, Download, Clock, Coins, ChevronDown, Zap, Maximize2, ExternalLink, Sparkles } from 'lucide-react';
 
 import 'katex/dist/katex.min.css';
 
@@ -78,6 +78,154 @@ const HyperThinkingCard: React.FC<{
         </div>
       )}
     </div>
+  );
+};
+
+const VisualAssetCard: React.FC<{ src: string; alt?: string }> = ({ src, alt }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleDownload = async (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    try {
+      const response = await fetch(src);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `rdirai_visual_${Date.now()}.png`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      window.open(src, '_blank');
+    }
+  };
+
+  const handleCopyLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(src);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const isLogo = (alt || '').toLowerCase().includes('logo') || src.toLowerCase().includes('logo');
+
+  return (
+    <>
+      <div className="relative group my-5 max-w-lg rounded-2xl overflow-hidden border border-purple-200/80 bg-slate-900 shadow-xl shadow-purple-950/20 transition-all duration-300 hover:shadow-purple-900/30 hover:border-purple-400/50">
+        {/* Card Header Badge */}
+        <div className="flex items-center justify-between px-4 py-2.5 bg-slate-900 border-b border-purple-900/40">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
+            <span className="font-mono text-[11px] font-semibold tracking-wider text-purple-300 uppercase">
+              {isLogo ? '🎨 Desain Logo Vector' : '✨ Desain Visual FLUX HD'}
+            </span>
+          </div>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+            FLUX HD Engine
+          </span>
+        </div>
+
+        {/* Image Container */}
+        <div className="relative overflow-hidden cursor-pointer bg-slate-950" onClick={() => setIsOpen(true)}>
+          <img
+            src={src}
+            alt={alt || 'RdirAI Visual Asset'}
+            className="w-full h-auto object-cover max-h-96 transition-transform duration-500 group-hover:scale-105"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-slate-950/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-[2px]">
+            <button
+              onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}
+              className="p-2.5 rounded-xl bg-white text-slate-900 font-medium text-xs flex items-center gap-1.5 shadow-lg transition-transform hover:scale-105"
+            >
+              <Maximize2 className="w-4 h-4 text-purple-600" />
+              Inspeksi Fullscreen
+            </button>
+          </div>
+        </div>
+
+        {/* Toolbar Footer */}
+        <div className="flex items-center justify-between px-4 py-2.5 bg-slate-900 border-t border-purple-900/40 text-xs text-slate-400">
+          <span className="truncate max-w-[200px] text-[11px] font-mono text-slate-400">
+            {alt || 'Visual Asset'}
+          </span>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleCopyLink}
+              className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
+              title="Salin Link Gambar"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+            </button>
+            <button
+              onClick={handleDownload}
+              className="px-3 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-medium text-[11px] flex items-center gap-1.5 transition-all shadow-md shadow-purple-950/50"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Download HD
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Fullscreen Lightbox Inspector Modal */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-200"
+          onClick={() => setIsOpen(false)}
+        >
+          <div
+            className="relative max-w-4xl max-h-[90vh] bg-slate-900 rounded-3xl border border-purple-500/30 overflow-hidden shadow-2xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-6 py-3 border-b border-slate-800 bg-slate-950/50">
+              <div className="flex items-center gap-2.5">
+                <Sparkles className="w-4 h-4 text-purple-400" />
+                <span className="font-semibold text-sm text-slate-200 font-mono">
+                  {alt || 'Inspeksi Visual Asset'}
+                </span>
+              </div>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-1.5 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-slate-950">
+              <img src={src} alt={alt} className="max-w-full max-h-[75vh] object-contain rounded-xl shadow-2xl" />
+            </div>
+
+            <div className="flex items-center justify-between px-6 py-4 bg-slate-900 border-t border-slate-800">
+              <span className="text-xs text-slate-400 font-mono">Resolusi: 1280x1280 (FLUX HD Engine)</span>
+              <div className="flex items-center gap-3">
+                <a
+                  href={src}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium flex items-center gap-1.5 transition-colors"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  Buka Link Asli
+                </a>
+                <button
+                  onClick={handleDownload}
+                  className="px-4 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg shadow-purple-950/40 transition-all"
+                >
+                  <Download className="w-4 h-4" />
+                  Download PNG HD
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
@@ -303,36 +451,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 h3: ({node, ...props}: any) => <h3 className="text-[15px] font-semibold text-gray-800 mt-6 mb-2" {...props} />,
                 h4: ({node, ...props}: any) => <h4 className="text-[14px] font-semibold text-gray-700 mt-5 mb-2" {...props} />,
                 p: ({node, ...props}: any) => <p className="text-gray-600 leading-relaxed mb-4" {...props} />,
-                img: ({node, ...props}: any) => {
-                  return (
-                    <div className="relative group inline-block my-4 max-w-full">
-                      <img className="rounded-xl shadow-md max-w-full border border-gray-100" {...props} />
-                      <button
-                        onClick={async (e) => {
-                          e.preventDefault();
-                          try {
-                            const response = await fetch(props.src);
-                            const blob = await response.blob();
-                            const url = window.URL.createObjectURL(blob);
-                            const a = document.createElement('a');
-                            a.href = url;
-                            a.download = `rdirai_image_${Date.now()}.png`;
-                            document.body.appendChild(a);
-                            a.click();
-                            window.URL.revokeObjectURL(url);
-                            document.body.removeChild(a);
-                          } catch (err) {
-                            window.open(props.src, '_blank');
-                          }
-                        }}
-                        className="absolute top-3 right-3 bg-black/50 hover:bg-black/80 text-white backdrop-blur-sm p-2 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-1.5 text-xs font-medium"
-                        title="Download Gambar"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        Download
-                      </button>
-                    </div>
-                  );
+                img: ({node, src, alt, ...props}: any) => {
+                  if (!src) return null;
+                  return <VisualAssetCard src={src} alt={alt} />;
                 },
                 code({ node, inline, className, children, ...props }: any) {
                   const match = /language-(\w+)/.exec(className || '');
