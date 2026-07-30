@@ -254,7 +254,7 @@ export default function Home() {
     setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
 
-    const activeModel = isWebSearchActive ? 'you-rag' : selectedModel;
+    const activeModel = (activeSkill !== 'none' && activeSkill !== 'image') ? 'you-rag' : selectedModel;
     const initialPhases = createPhasesForPrompt(text, activeModel);
 
     const assistantMsgId = `msg_a_${Date.now()}`;
