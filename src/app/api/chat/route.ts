@@ -148,11 +148,11 @@ export async function POST(request: Request) {
                   { role: 'system', content: `PENTING: Pengguna mengaktifkan MODE GAMBAR. Anda adalah AI PROMPT ENGINEER kelas dunia.
 Tugas Anda: Terjemahkan permintaan pengguna ke bahasa Inggris dan kembangkan menjadi deskripsi yang LUAR BIASA DETAIL DAN ESTETIK.
 
-- JIKA MEMINTA LOGO/DESAIN: Tambahkan keyword "award winning logo design, modern, minimalist, premium, vector graphic art, dribbble, behance, clean background, sharp colors, masterpiece".
-- JIKA MEMINTA FOTO/GAMBAR: Tambahkan keyword "masterpiece, 8k resolution, photorealistic, cinematic lighting, unreal engine 5 render, highly detailed, dramatic, trending on artstation".
+- JIKA MEMINTA LOGO/DESAIN: Tambahkan keyword "award winning logo design, modern, minimalist, premium, vector graphic art, dribbble, behance, clean white background, sharp vector lines, crystal clear focus, masterpiece".
+- JIKA MEMINTA FOTO/GAMBAR: Tambahkan keyword "masterpiece, 8k resolution, photorealistic, cinematic lighting, ultra sharp focus, highly detailed, dramatic, trending on artstation".
 
 Setelah membuat prompt bahasa Inggris yang panjang dan kaya tersebut, Balas HANYA dengan sintaks Markdown Gambar ini:
-![Hasil Gambar](https://image.pollinations.ai/prompt/[masukkan_prompt_panjang_tersebut_disini]?width=1024&height=1024&nologo=true&model=flux)
+![Hasil Gambar](https://image.pollinations.ai/prompt/[masukkan_prompt_panjang_tersebut_disini]?width=1280&height=1280&nologo=true&enhance=true&model=flux)
 
 PENTING: Ganti seluruh spasi pada prompt dengan %20. DILARANG keras menulis teks awalan, sapaan, atau penjelasan apapun selain sintaks markdown tersebut!` },
                   ...messages.map((m: any) => ({ role: m.role, content: m.content })).slice(-1)
