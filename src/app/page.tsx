@@ -92,6 +92,12 @@ export default function Home() {
       const data = await res.json();
       if (data.messages) {
         setMessages(data.messages);
+        
+        // Restore the model used in this conversation
+        const lastAssistantMsg = [...data.messages].reverse().find((m: Message) => m.role === 'assistant' && m.model);
+        if (lastAssistantMsg && lastAssistantMsg.model) {
+          setSelectedModel(lastAssistantMsg.model);
+        }
       }
     } catch (err) {
       console.error('Error fetching messages:', err);

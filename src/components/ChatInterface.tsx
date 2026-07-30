@@ -496,7 +496,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 <select 
                   value={selectedModel}
                   onChange={(e) => onSelectModel(e.target.value)}
-                  className="bg-white border border-gray-200 text-gray-700 text-[11px] rounded px-2 py-1 outline-none focus:border-blue-400 cursor-pointer font-sans"
+                  disabled={messages.length > 0}
+                  title={messages.length > 0 ? "Model tidak bisa diubah di tengah sesi untuk menjaga konteks percakapan" : "Pilih model AI"}
+                  className={`bg-white border border-gray-200 text-[11px] rounded px-2 py-1 outline-none font-sans transition-colors ${
+                    messages.length > 0 
+                      ? 'opacity-75 cursor-not-allowed bg-gray-100 text-gray-500' 
+                      : 'text-gray-700 focus:border-blue-400 cursor-pointer'
+                  }`}
                 >
                   {OPENROUTER_MODELS.map(model => (
                     <option key={model.id} value={model.id}>
