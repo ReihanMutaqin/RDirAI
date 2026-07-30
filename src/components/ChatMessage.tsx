@@ -170,10 +170,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             </div>
           )}
 
-          {/* Phase Execution Timeline Tracker if present */}
-          {message.phases && message.phases.length > 0 && (
-            <PhaseTracker phases={message.phases} />
-          )}
+
 
           {/* Markdown Content */}
           <div className="prose max-w-none text-sm leading-relaxed text-gray-700 transition-opacity duration-150">
