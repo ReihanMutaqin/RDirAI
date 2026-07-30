@@ -22,6 +22,7 @@ export default function Home() {
   const [activeArtifact, setActiveArtifact] = useState<CodeArtifact | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
+  const skipNextFetchRef = useRef(false);
 
   useEffect(() => {
     checkCurrentUser();
@@ -33,7 +34,11 @@ export default function Home() {
 
   useEffect(() => {
     if (activeConvId) {
-      fetchMessages(activeConvId);
+      if (skipNextFetchRef.current) {
+        skipNextFetchRef.current = false;
+      } else {
+        fetchMessages(activeConvId);
+      }
     } else {
       setMessages([]);
       setGeneratedFiles([]);
@@ -270,6 +275,7 @@ export default function Home() {
 
       const returnedConvId = response.headers.get('X-Conversation-Id');
       if (returnedConvId && returnedConvId !== activeConvId) {
+        skipNextFetchRef.current = true;
         setActiveConvId(returnedConvId);
         fetchConversations();
       }
