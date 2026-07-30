@@ -197,6 +197,23 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 remarkPlugins={[remarkGfm, remarkMath]}
                 rehypePlugins={[rehypeHighlight, rehypeKatex]}
               components={{
+                table: ({ node, ...props }: any) => (
+                  <div className="my-5 overflow-x-auto rounded-xl border border-blue-100 bg-gradient-to-b from-white to-blue-50/20 shadow-sm">
+                    <table className="w-full text-left text-xs border-collapse" {...props} />
+                  </div>
+                ),
+                thead: ({ node, ...props }: any) => (
+                  <thead className="bg-slate-900 text-slate-100 font-semibold uppercase text-[11px] tracking-wider border-b border-slate-800" {...props} />
+                ),
+                th: ({ node, ...props }: any) => (
+                  <th className="px-4 py-3 font-mono font-medium text-blue-300" {...props} />
+                ),
+                tr: ({ node, ...props }: any) => (
+                  <tr className="border-b border-gray-100 hover:bg-blue-50/60 transition-colors odd:bg-white even:bg-slate-50/50" {...props} />
+                ),
+                td: ({ node, ...props }: any) => (
+                  <td className="px-4 py-3 font-sans text-gray-700 font-medium" {...props} />
+                ),
                 h3: ({node, ...props}: any) => <h3 className="text-[15px] font-semibold text-gray-800 mt-6 mb-2" {...props} />,
                 h4: ({node, ...props}: any) => <h4 className="text-[14px] font-semibold text-gray-700 mt-5 mb-2" {...props} />,
                 p: ({node, ...props}: any) => <p className="text-gray-600 leading-relaxed mb-4" {...props} />,

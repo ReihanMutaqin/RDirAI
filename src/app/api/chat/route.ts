@@ -67,21 +67,27 @@ async function streamFormattedDataWithLLM(
   const formatMessages = [
     {
       role: 'system',
-      content: `Anda adalah RdirAI Executive Data Presenter.
-Tugas Anda: Ambil data hasil pencarian mentah berikut dan FORMAT ULANG menjadi laporan visual yang SANGAT CANTIK, RAPI, SANGAT ESTETIK, DAN PROFESIONAL.
+      content: `Anda adalah RdirAI Executive Data Presenter - Engine Penyaji Data Kelas Atas.
+Tugas Utama Anda: Ambil data mentah hasil pencarian dan SUSUN KEMBALI MENJADI TABEL MARKDOWN DAN LAPORAN EKSEKUTIF YANG SANGAT ANGGUN DAN FUTURISTIK.
 
-ATURAN PRESENTASI WAJIB:
-1. Hapus SEMUA sitasi angka mentah seperti [[12, 23]], [1], [27], dll.
-2. JIKA ADA DATA ANGKA / HARGA / KEUANGAN / KRIPTO / SAHAM / PERBANDINGAN: WAJIB buatkan TABEL MARKDOWN yang rapi, simetris, dan mudah dibaca!
-3. Gunakan Poin-Poin Tebal (**Headline**), Sub-Judul (###), dan Highlight Warna Teks jika relevan.
-4. Buatkan ringkasan "📌 Poin Penting Eksekutif" di bagian paling atas.
-5. Bahasa: Gunakan Bahasa Indonesia yang ramah, profesional, dan futuristik. Jangan tampilkan teks mentah atau bracket sitasi!`
+ATURAN PRESENTASI MUTLAK:
+1. HAPUS 100% SEMUA SITASI ANGKA MENTAH seperti [[1, 2]], [[12, 23]], [1], [27], dll. DILARANG MENYISAKAN BRAKET ANGKA SITASI APAPUN!
+2. WAJIB BUATKAN TABEL MARKDOWN (| Header 1 | Header 2 |) untuk SEMUA data angka, kurs Rupiah/USD, harga saham, kripto (BTC/ETH/USDT), perbandingan data, atau rincian spesifikasi!
+3. Format struktur laporan:
+   - 📌 **Poin Penting Eksekutif** (Ringkasan 2-3 kalimat tebal)
+   - 📊 **Tabel Ringkasan Data & Nilai** (Tabel Markdown simetris)
+   - 💡 **Analisis & Catatan Pasar** (Poin-poin tebal yang ringkas)
+4. Buat tampilan terasa sangat eksklusif, mahal, rapi, dan berbeda dari AI lainnya!`
     },
     {
       role: 'user',
       content: `Pertanyaan Pengguna: ${userPrompt}\n\nData Mentah Hasil Pencarian:\n${rawSearchData}`
     }
   ];
+
+  const targetModel = selectedModel && !selectedModel.toLowerCase().includes('you')
+    ? selectedModel
+    : (process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'inclusionai/ling-3.0-flash:free');
 
   try {
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -93,7 +99,7 @@ ATURAN PRESENTASI WAJIB:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: selectedModel,
+        model: targetModel,
         messages: formatMessages,
         stream: true,
       }),
@@ -201,21 +207,21 @@ export async function POST(request: Request) {
             if (!res.ok) throw new Error(`You.com Search API error: ${await res.text()}`);
             const data = await res.json();
             
-            let resultMarkdown = "### 🔍 Hasil Pencarian Web Instan:\n\n";
+            let rawResultMarkdown = "";
             if (data.hits && data.hits.length > 0) {
               data.hits.slice(0, 5).forEach((hit: any) => {
-                resultMarkdown += `#### 🌐 [${hit.title}](${hit.url})\n${hit.snippets?.join(' ') || ''}\n\n`;
+                rawResultMarkdown += `#### 🌐 [${hit.title}](${hit.url})\n${hit.snippets?.join(' ') || ''}\n\n`;
               });
             } else {
-              resultMarkdown += data.answer || "Tidak ada hasil instan spesifik dari pencarian.";
+              rawResultMarkdown = data.answer || "Tidak ada hasil instan spesifik dari pencarian.";
             }
 
-            const chunkSize = 6;
-            for (let i = 0; i < resultMarkdown.length; i += chunkSize) {
-              const chunk = resultMarkdown.slice(i, i + chunkSize);
-              accumulatedContent += chunk;
-              controller.enqueue(encoder.encode(chunk));
-              await new Promise(r => setTimeout(r, 8));
+            if (orApiKey) {
+              const formatted = await streamFormattedDataWithLLM(rawResultMarkdown, lastUserMessage.content, orApiKey, selectedModel, controller, encoder, decoder);
+              accumulatedContent += formatted;
+            } else {
+              accumulatedContent += rawResultMarkdown;
+              controller.enqueue(encoder.encode(rawResultMarkdown));
             }
           }
           // 2. SKILL: DEEP RESEARCH (/v1/research exhaustive)
