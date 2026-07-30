@@ -330,10 +330,7 @@ export default function Home() {
             )
           );
 
-          const artifact = extractArtifactFromContent(accumulated);
-          if (artifact) {
-            setActiveArtifact(artifact);
-          }
+          // Keep content updated during streaming without opening blocking panels
         });
       }
 
@@ -341,6 +338,12 @@ export default function Home() {
       setMessages((prev) =>
         prev.map((m) => (m.id === assistantMsgId ? { ...m, phases: finalPhases } : m))
       );
+
+      // Only auto-open LiveView ONCE the AI has completely finished generating all files!
+      const finalArtifact = extractArtifactFromContent(accumulated);
+      if (finalArtifact) {
+        setActiveArtifact(finalArtifact);
+      }
     } catch (err: any) {
       if (err.name !== 'AbortError') {
         console.error('Streaming Error:', err);
