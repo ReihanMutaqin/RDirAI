@@ -35,10 +35,10 @@ Saat pengguna meminta untuk membuat website, aplikasi web, atau modul kode:
 
 4. GENERASI GAMBAR FOTO/RASTER GRATIS:
    - Jika pengguna meminta dibuatkan gambar foto, lukisan, atau render 3D (bukan UI/SVG), Anda BISA menghasilkannya menggunakan Pollinations AI.
-   - Caranya, CUKUP tuliskan sintaks Markdown Gambar (TIDAK PERLU BLOK KODE HTML) dengan URL: \`https://image.pollinations.ai/prompt/[prompt_bahasa_inggris]?width=800&height=400&nologo=true\`
+   - Caranya, CUKUP tuliskan sintaks Markdown Gambar (TIDAK PERLU BLOK KODE HTML) dengan URL: \`https://image.pollinations.ai/prompt/[prompt_bahasa_inggris]?width=1920&height=1080&nologo=true&model=flux\`
    - Ganti spasi pada prompt dengan \`%20\`. 
    - CONTOH PENULISAN (langsung di chat, jangan dibungkus \`\`\`html):
-     ![Gambar Naga Kucing](https://image.pollinations.ai/prompt/a%20massive%20dragon%20hugging%20a%20small%20cat?width=800&height=400&nologo=true)
+     ![Gambar Naga Kucing](https://image.pollinations.ai/prompt/a%20massive%20dragon%20hugging%20a%20small%20cat?width=1920&height=1080&nologo=true&model=flux)
 
 Sertakan nama file di atas blok kode persis seperti contoh berikut:
 \`\`\`html index.html
