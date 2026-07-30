@@ -13,6 +13,8 @@ import { User, Terminal, Copy, Check, Play, FileText, Image as ImageIcon, FileCo
 
 import 'katex/dist/katex.min.css';
 
+import { ChartWidget } from './ChartWidget';
+
 interface ChatMessageProps {
   message: Message;
   isLastAssistant?: boolean;
@@ -252,6 +254,16 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                   const match = /language-(\w+)/.exec(className || '');
                   const codeText = String(children).replace(/\n$/, '');
                   const lang = match ? match[1] : '';
+
+                  // Render ChartWidget if code block is language-chart or contains valid chart JSON
+                  if (!inline && (lang === 'chart' || lang === 'json' || codeText.trim().startsWith('{'))) {
+                    try {
+                      const parsed = JSON.parse(codeText.trim());
+                      if (parsed && parsed.data && Array.isArray(parsed.data) && (parsed.type === 'bar' || parsed.type === 'pie' || parsed.type === 'donut')) {
+                        return <ChartWidget type={parsed.type} title={parsed.title} subtitle={parsed.subtitle} data={parsed.data} />;
+                      }
+                    } catch (e) {}
+                  }
 
                   const isLivePreviewable =
                     ['html', 'xml', 'svg', 'javascript', 'js', 'jsx', 'css', 'php'].includes(lang.toLowerCase()) ||
