@@ -164,12 +164,17 @@ export async function POST(request: Request) {
               return;
             }
 
+            let buffer = '';
             while (true) {
               const { done, value } = await reader.read();
               if (done) break;
 
               const chunk = decoder.decode(value, { stream: true });
-              const lines = chunk.split('\n');
+              buffer += chunk;
+              const lines = buffer.split('\n');
+              
+              // Keep the last incomplete line in the buffer
+              buffer = lines.pop() || '';
 
               for (const line of lines) {
                 const trimmed = line.trim();
