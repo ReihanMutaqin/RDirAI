@@ -99,6 +99,11 @@ export async function POST(request: Request) {
             // YOU.COM LOGIC
             if (!ydcApiKey) throw new Error("YDC_API_KEY is missing in .env");
             
+            // Berikan feedback instan ke UI agar tidak terkesan nge-hang
+            const searchMessage = "> 🔍 *Sedang menjelajahi internet untuk mencari data terbaru...*\n\n";
+            accumulatedContent += searchMessage;
+            controller.enqueue(encoder.encode(searchMessage));
+
             const response = await fetch('https://api.you.com/v1/research', {
               method: 'POST',
               headers: {
@@ -107,7 +112,7 @@ export async function POST(request: Request) {
               },
               body: JSON.stringify({
                 input: lastUserMessage.content,
-                research_effort: 'exhaustive',
+                research_effort: 'basic',
               }),
             });
 
