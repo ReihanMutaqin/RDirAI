@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Message, CodeArtifact, AttachedFile, GeneratedFile } from '@/types/chat';
+import { Message, CodeArtifact, AttachedFile, GeneratedFile, OPENROUTER_MODELS } from '@/types/chat';
 import { ChatMessage } from './ChatMessage';
 import { PhaseTracker } from './PhaseTracker';
 import { AllFilesDrawer } from './AllFilesDrawer';
@@ -47,6 +47,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   generatedFiles = [],
   isLoading,
   selectedModel,
+  onSelectModel,
   onSendMessage,
   onContinueGeneration,
   onStopStream,
@@ -490,17 +491,29 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100">
                   SVG
                 </span>
-              </div>
-
-              {!isLoading && messages.length > 0 && lastMessage && lastMessage.role === 'assistant' && (
-                <button
-                  onClick={onContinueGeneration}
-                  className="text-cyan-600 hover:text-cyan-700 flex items-center gap-1 font-semibold hover:underline"
+              <div className="flex items-center gap-3">
+                <select 
+                  value={selectedModel}
+                  onChange={(e) => onSelectModel(e.target.value)}
+                  className="bg-white border border-gray-200 text-gray-700 text-[11px] rounded px-2 py-1 outline-none focus:border-blue-400 cursor-pointer font-sans"
                 >
-                  <PlayCircle className="w-3.5 h-3.5 text-cyan-600 fill-cyan-100" />
-                  <span>▶ Lanjutkan Kode</span>
-                </button>
-              )}
+                  {OPENROUTER_MODELS.map(model => (
+                    <option key={model.id} value={model.id}>
+                      {model.name} {model.badge ? `(${model.badge})` : ''}
+                    </option>
+                  ))}
+                </select>
+
+                {!isLoading && messages.length > 0 && lastMessage && lastMessage.role === 'assistant' && (
+                  <button
+                    onClick={onContinueGeneration}
+                    className="text-cyan-600 hover:text-cyan-700 flex items-center gap-1 font-semibold hover:underline"
+                  >
+                    <PlayCircle className="w-3.5 h-3.5 text-cyan-600 fill-cyan-100" />
+                    <span>▶ Lanjutkan Kode</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="relative flex items-center">
@@ -518,7 +531,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask anything, @ models / prompts"
+                placeholder="Ask anything..."
                 rows={1}
                 className="w-full py-4 pl-1 pr-14 bg-transparent text-sm text-gray-800 placeholder-gray-400 resize-none focus:outline-none max-h-36 min-h-[56px] custom-scrollbar font-sans"
               />
