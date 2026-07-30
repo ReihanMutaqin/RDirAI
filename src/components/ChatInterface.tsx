@@ -546,24 +546,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     <div className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-all shadow-sm ${isImageModeActive ? 'left-[14px]' : 'left-0.5'}`}></div>
                   </div>
                 </button>
-
-                <select 
-                  value={selectedModel}
-                  onChange={(e) => onSelectModel(e.target.value)}
-                  disabled={messages.length > 0 || isWebSearchActive || isImageModeActive}
-                  title={messages.length > 0 ? "Model tidak bisa diubah di tengah sesi" : (isWebSearchActive || isImageModeActive) ? "Model dikunci saat Skill aktif" : "Pilih model AI"}
-                  className={`bg-white border border-gray-200 text-[11px] rounded px-2 py-1 outline-none font-sans transition-colors ${
-                    messages.length > 0 || isWebSearchActive || isImageModeActive
-                      ? 'opacity-75 cursor-not-allowed bg-gray-100 text-gray-500' 
-                      : 'text-gray-700 focus:border-blue-400 cursor-pointer'
-                  }`}
-                >
-                  {OPENROUTER_MODELS.map(model => (
-                    <option key={model.id} value={model.id}>
-                      {model.name} {model.badge ? `(${model.badge})` : ''}
-                    </option>
-                  ))}
-                </select>
               </div>
             </div>
 
