@@ -65,6 +65,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isAutoScrollPaused = useRef(false);
 
   const lastMessage = messages[messages.length - 1];
   const activePhases =
@@ -85,17 +86,23 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
     return () => clearInterval(timer);
   }, [isLoading]);
 
-  const scrollToBottomSmooth = () => {
-    if (scrollContainerRef.current) {
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
+    isAutoScrollPaused.current = !isNearBottom;
+  };
+
+  const scrollToBottom = () => {
+    if (scrollContainerRef.current && !isAutoScrollPaused.current) {
       scrollContainerRef.current.scrollTo({
         top: scrollContainerRef.current.scrollHeight,
-        behavior: 'smooth',
+        behavior: isLoading ? 'auto' : 'smooth',
       });
     }
   };
 
   useEffect(() => {
-    scrollToBottomSmooth();
+    scrollToBottom();
   }, [messages, isLoading]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -265,7 +272,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
       {/* Messages Scroll Viewport */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto custom-scrollbar scroll-smooth relative z-0"
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto custom-scrollbar relative z-0"
       >
         {messages.length === 0 ? (
           /* High-End Studio Hero Screen */
