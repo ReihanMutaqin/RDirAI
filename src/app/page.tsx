@@ -18,6 +18,7 @@ export default function Home() {
     process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'inclusionai/ling-3.0-flash:free'
   );
   const [isWebSearchActive, setIsWebSearchActive] = useState(false);
+  const [isImageModeActive, setIsImageModeActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeArtifact, setActiveArtifact] = useState<CodeArtifact | null>(null);
@@ -280,6 +281,7 @@ export default function Home() {
           conversationId: activeConvId,
           messages: newMessages,
           model: activeModel,
+          isImageMode: isImageModeActive,
         }),
         signal: controller.signal,
       });
@@ -424,6 +426,8 @@ export default function Home() {
           onSelectModel={setSelectedModel}
           isWebSearchActive={isWebSearchActive}
           setIsWebSearchActive={setIsWebSearchActive}
+          isImageModeActive={isImageModeActive}
+          setIsImageModeActive={setIsImageModeActive}
           onSendMessage={handleSendMessage}
           onContinueGeneration={handleContinueGeneration}
           onStopStream={handleStopStream}

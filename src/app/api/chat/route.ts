@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     await initDb();
     const userId = await getCurrentUserId();
     const body = await request.json();
-    const { conversationId, messages, model } = body;
+    const { conversationId, messages, model, isImageMode } = body;
 
     const orApiKey = process.env.OPENROUTER_API_KEY;
     const ydcApiKey = process.env.YDC_API_KEY;
@@ -143,11 +143,16 @@ export async function POST(request: Request) {
             // OPENROUTER LOGIC
             if (!orApiKey) throw new Error("OPENROUTER_API_KEY is missing in .env");
 
-            const fullMessages = [
-              { role: 'system', content: SYSTEM_PROMPT },
-              ...messages.map((m: any) => ({
-                role: m.role,
-                content: m.content,
+            const fullMessages = isImageMode 
+              ? [
+                  { role: 'system', content: `PENTING: Pengguna mengaktifkan MODE GAMBAR. Balas HANYA dengan sintaks Markdown Gambar menggunakan URL Pollinations AI:\n![Deskripsi Gambar](https://image.pollinations.ai/prompt/[prompt_bahasa_inggris]?width=1920&height=1080&nologo=true&model=flux)\nGanti spasi pada prompt dengan %20. DILARANG menuliskan hal lain, kode, atau penjelasan.` },
+                  ...messages.map((m: any) => ({ role: m.role, content: m.content })).slice(-1)
+                ]
+              : [
+                  { role: 'system', content: SYSTEM_PROMPT },
+                  ...messages.map((m: any) => ({
+                    role: m.role,
+                    content: m.content,
               })),
             ];
 
