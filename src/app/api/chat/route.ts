@@ -167,16 +167,29 @@ async function fetchCompletionWithFallback(
 
   // Ultimate Fast Engine: Pollinations AI Free Unlimited Text Engine (No API Key, No Rate Limits)
   console.warn('All OpenRouter free models rate-limited or timed out. Activating Pollinations Unlimited Engine!');
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch('https://text.pollinations.ai/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: messages,
+        model: 'openai',
+      }),
+      signal: controller.signal
+    });
+    clearTimeout(timer);
+    if (res.ok) return res;
+  } catch (e) {
+    console.warn('Pollinations POST endpoint timed out, trying GET fallback...');
+  }
+
+  // Fallback GET endpoint for Pollinations AI
+  const promptStr = messages[messages.length - 1]?.content || 'Buatkan ringkasan klasemen dan jadwal lengkap.';
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 8000);
-  const res = await fetch('https://text.pollinations.ai/openai/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'openai',
-      messages: messages,
-      stream: true,
-    }),
+  const timer = setTimeout(() => controller.abort(), 6000);
+  const res = await fetch(`https://text.pollinations.ai/${encodeURIComponent(promptStr)}?model=openai`, {
     signal: controller.signal
   });
   clearTimeout(timer);
@@ -224,9 +237,9 @@ async function parseAndEnqueueStream(
     }
   }
 
-  // Handle final remaining buffer (especially non-SSE single-line JSON like Pollinations AI)
+  // Handle final remaining buffer (especially non-SSE plain text or single-line JSON from Pollinations AI)
   const finalRaw = accumulatedRaw.trim();
-  if (finalRaw) {
+  if (finalRaw && !fullText) {
     if (finalRaw.startsWith('data: ')) {
       const dataStr = finalRaw.replace('data: ', '');
       if (dataStr !== '[DONE]') {
@@ -243,11 +256,15 @@ async function parseAndEnqueueStream(
       try {
         const json = JSON.parse(finalRaw);
         const content = json.choices?.[0]?.message?.content || json.choices?.[0]?.delta?.content || json.text || '';
-        if (content && !fullText) {
+        if (content) {
           fullText += content;
           controller.enqueue(encoder.encode(content));
         }
       } catch (e) {}
+    } else {
+      // Plain text response from Pollinations GET endpoint
+      fullText = finalRaw;
+      controller.enqueue(encoder.encode(finalRaw));
     }
   }
 
@@ -292,7 +309,7 @@ ATURAN PRESENTASI MUTLAK:
 
   const targetModel = selectedModel && !selectedModel.toLowerCase().includes('you')
     ? selectedModel
-    : (process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'google/gemini-2.0-flash-exp:free');
+    : (process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'inclusionai/ling-3.0-flash:free');
 
   let fullText = '';
   try {
@@ -304,9 +321,13 @@ ATURAN PRESENTASI MUTLAK:
     console.error('LLM formatting failed:', err);
   }
 
-  // 100% Guaranteed Non-Empty Fallback (Never leaves UI hanging on "Mencari informasi...")
+  // Clean fallback: Never stream ugly [Data Sumber] headers into chat!
   if (!fullText.trim()) {
-    const fallbackNotice = `📌 **Ringkasan Informasi Web Terkini**\n\nBerikut adalah data hasil pencarian internet untuk: **${userPrompt}**\n\n${rawSearchData.substring(0, 1500)}`;
+    const cleanSnippet = rawSearchData
+      .replace(/\[Data Sumber \d+: [^\]]+\]/g, '')
+      .replace(/http[s]?:\/\/[^\s]+/g, '')
+      .trim();
+    const fallbackNotice = `📌 **Poin Penting Eksekutif**\n\nBerikut adalah data ringkasan hasil pencarian web terbaru untuk **${userPrompt}**:\n\n${cleanSnippet.substring(0, 800)}`;
     controller.enqueue(encoder.encode(fallbackNotice));
     fullText = fallbackNotice;
   }
