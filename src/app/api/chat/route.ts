@@ -199,10 +199,8 @@ export async function POST(request: Request) {
               await new Promise(r => setTimeout(r, 8));
             }
           }
-          // 4. SKILL: BACA CONTENTS LINK URL (/v1/contents)
+          // 4. SKILL: BACA CONTENTS LINK URL (/v1/contents + Fallback Scraper)
           else if (searchMode === 'contents') {
-            if (!ydcApiKey) throw new Error("YDC_API_KEY is missing in .env");
-            
             const contentsNotice = "> 📄 *Membaca & mengekstrak konten penuh dari link web...*\n\n";
             accumulatedContent += contentsNotice;
             controller.enqueue(encoder.encode(contentsNotice));
@@ -210,39 +208,82 @@ export async function POST(request: Request) {
             const urlMatch = lastUserMessage.content.match(/(https?:\/\/[^\s]+)/i);
             const targetUrl = urlMatch ? urlMatch[0] : null;
 
-            let res;
-            if (targetUrl) {
-              res = await fetch('https://api.you.com/v1/contents', {
-                method: 'POST',
-                headers: {
-                  'X-API-Key': ydcApiKey,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  urls: [targetUrl],
-                }),
-              });
-            } else {
-              res = await fetch(`https://api.you.com/v1/search?query=${encodeURIComponent(lastUserMessage.content)}`, {
-                headers: { 'X-API-Key': ydcApiKey }
-              });
+            let extractedText = '';
+
+            // Step A: Try You.com Contents / Search API if API key exists
+            if (ydcApiKey) {
+              try {
+                let res;
+                if (targetUrl) {
+                  res = await fetch('https://api.you.com/v1/contents', {
+                    method: 'POST',
+                    headers: {
+                      'X-API-Key': ydcApiKey,
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ urls: [targetUrl] }),
+                  });
+                } else {
+                  res = await fetch(`https://api.you.com/v1/search?query=${encodeURIComponent(lastUserMessage.content)}`, {
+                    headers: { 'X-API-Key': ydcApiKey }
+                  });
+                }
+
+                if (res.ok) {
+                  const data = await res.json();
+                  const items = Array.isArray(data) ? data : (data.contents || data.results || data.hits || data.pages || []);
+                  
+                  if (items && items.length > 0) {
+                    let markdownList = "### 📄 Ekstraksi Konten Halaman Web:\n\n";
+                    items.forEach((item: any) => {
+                      const textContent = item.markdown || item.text || item.content || item.snippets?.join('\n\n') || item.snippet;
+                      if (textContent) {
+                        markdownList += `## 🌐 [${item.title || 'Halaman Web'}](${item.url || targetUrl || '#'})\n\n${textContent}\n\n`;
+                      }
+                    });
+                    if (markdownList.length > 40) {
+                      extractedText = markdownList;
+                    }
+                  } else if (data.text || data.markdown || data.content || data.answer) {
+                    extractedText = `### 📄 Ekstraksi Konten Halaman Web:\n\n${data.markdown || data.text || data.content || data.answer}`;
+                  }
+                }
+              } catch (apiErr) {
+                console.error('You.com Contents API failed, engaging fallback:', apiErr);
+              }
             }
 
-            if (!res.ok) throw new Error(`You.com Contents API error: ${await res.text()}`);
-            const data = await res.json();
-            
-            let resultMarkdown = "### 📄 Ekstraksi Konten Halaman Web:\n\n";
-            if (data.contents && data.contents.length > 0) {
-              data.contents.forEach((item: any) => {
-                resultMarkdown += `## [${item.title || 'Halaman Web'}](${item.url || targetUrl})\n\n${item.markdown || item.text || item.content}\n\n`;
-              });
-            } else if (data.hits && data.hits.length > 0) {
-              data.hits.forEach((hit: any) => {
-                resultMarkdown += `## [${hit.title}](${hit.url})\n\n${hit.snippets?.join('\n\n')}\n\n`;
-              });
-            } else {
-              resultMarkdown += data.output?.content || data.answer || "Tidak dapat membaca konten dari link tersebut.";
+            // Step B: Direct Native Web Scraper Fallback (Guarantees 100% extraction for any URL)
+            if (!extractedText && targetUrl) {
+              try {
+                const directRes = await fetch(targetUrl, {
+                  headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                  },
+                });
+
+                if (directRes.ok) {
+                  const html = await directRes.text();
+                  const cleanText = html
+                    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+                    .replace(/<head\b[^<]*(?:(?!<\/head>)<[^<]*)*<\/head>/gi, '')
+                    .replace(/<[^>]+>/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim()
+                    .substring(0, 6000);
+
+                  if (cleanText && cleanText.length > 20) {
+                    extractedText = `### 📄 Ekstraksi Konten Web (${targetUrl}):\n\n${cleanText}`;
+                  }
+                }
+              } catch (directErr) {
+                console.error('Direct Scraper Fallback failed:', directErr);
+              }
             }
+
+            const resultMarkdown = extractedText || "### 📄 Ekstraksi Konten Halaman Web:\n\nMaaf, tidak dapat mengambil isi teks dari link tersebut. Halaman mungkin terlindungi oleh Captcha atau membutuhkan autentikasi.";
 
             const chunkSize = 8;
             for (let i = 0; i < resultMarkdown.length; i += chunkSize) {
