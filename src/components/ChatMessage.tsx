@@ -137,7 +137,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-[13px] font-bold text-gray-800 tracking-tight">
-                {isUser ? 'Anda' : (message.model?.toLowerCase().includes('you') ? 'You.com' : 'RdirAI')}
+                {isUser ? 'Anda' : 'RdirAI'}
               </span>
             </div>
 
