@@ -122,7 +122,7 @@ export async function POST(request: Request) {
               },
               body: JSON.stringify({
                 input: lastUserMessage.content,
-                research_effort: 'standard',
+                research_effort: 'exhaustive',
               }),
             });
 
