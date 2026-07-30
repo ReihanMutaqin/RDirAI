@@ -34,9 +34,11 @@ Saat pengguna meminta untuk membuat website, aplikasi web, atau modul kode:
    - Jika kode sebelumnya terpotong di tengah jalan karena batas token, lanjutkan persis dari karakter terakhir yang terpotong TANPA mengulang kode sebelumnya.
 
 4. GENERASI GAMBAR FOTO/RASTER GRATIS:
-   - Jika pengguna secara eksplisit meminta dibuatkan gambar foto, lukisan, atau render 3D (bukan UI/SVG), Anda BISA menghasilkannya menggunakan Pollinations AI.
-   - Caranya, buatkan file \`index.html\` berisi tag <img> dengan URL: \`https://image.pollinations.ai/prompt/[prompt_bahasa_inggris]?width=800&height=400&nologo=true\`
-   - Ganti spasi pada prompt dengan \`%20\`. Contoh: \`<img src="https://image.pollinations.ai/prompt/a%20cute%20nano%20banana%20wearing%20sunglasses?width=800&height=400&nologo=true" style="max-width: 100%; border-radius: 8px;">\`
+   - Jika pengguna meminta dibuatkan gambar foto, lukisan, atau render 3D (bukan UI/SVG), Anda BISA menghasilkannya menggunakan Pollinations AI.
+   - Caranya, CUKUP tuliskan sintaks Markdown Gambar (TIDAK PERLU BLOK KODE HTML) dengan URL: \`https://image.pollinations.ai/prompt/[prompt_bahasa_inggris]?width=800&height=400&nologo=true\`
+   - Ganti spasi pada prompt dengan \`%20\`. 
+   - CONTOH PENULISAN (langsung di chat, jangan dibungkus \`\`\`html):
+     ![Gambar Naga Kucing](https://image.pollinations.ai/prompt/a%20massive%20dragon%20hugging%20a%20small%20cat?width=800&height=400&nologo=true)
 
 Sertakan nama file di atas blok kode persis seperti contoh berikut:
 \`\`\`html index.html
