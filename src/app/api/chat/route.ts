@@ -55,15 +55,23 @@ Berikan jawaban yang sangat jelas, ramah, dan profesional.
 `;
 function extractHitsFromYouData(data: any): any[] {
   if (!data) return [];
-  const rawList: any[] = [
-    ...(Array.isArray(data.hits) ? data.hits : []),
-    ...(Array.isArray(data.news?.results) ? data.news.results : (Array.isArray(data.news) ? data.news : [])),
-    ...(Array.isArray(data.web?.results) ? data.web.results : (Array.isArray(data.web) ? data.web : [])),
-    ...(Array.isArray(data.results) ? data.results : [])
-  ];
+  const hits: any[] = [];
+  
+  if (Array.isArray(data.hits)) hits.push(...data.hits);
+  if (Array.isArray(data.news)) hits.push(...data.news);
+  if (Array.isArray(data.news?.results)) hits.push(...data.news.results);
+  if (Array.isArray(data.web)) hits.push(...data.web);
+  if (Array.isArray(data.web?.results)) hits.push(...data.web.results);
+
+  if (data.results && typeof data.results === 'object' && !Array.isArray(data.results)) {
+    if (Array.isArray(data.results.web)) hits.push(...data.results.web);
+    if (Array.isArray(data.results.news)) hits.push(...data.results.news);
+  } else if (Array.isArray(data.results)) {
+    hits.push(...data.results);
+  }
 
   const map = new Map<string, any>();
-  rawList.forEach((item) => {
+  hits.forEach((item) => {
     if (item && (item.title || item.url)) {
       const key = item.url || item.title;
       if (!map.has(key)) map.set(key, item);
@@ -248,6 +256,8 @@ export async function POST(request: Request) {
             if (hits.length > 0) {
               hits.slice(0, 8).forEach((hit: any) => {
                 const snippetText = 
+                  hit.contents?.markdown ||
+                  hit.contents?.text ||
                   (Array.isArray(hit.snippets) && hit.snippets.length > 0 ? hit.snippets.join(' ') : '') ||
                   hit.snippet ||
                   hit.description ||
@@ -469,6 +479,8 @@ export async function POST(request: Request) {
                 if (hits.length > 0) {
                   hits.slice(0, 8).forEach((hit: any) => {
                     const snippetText = 
+                      hit.contents?.markdown ||
+                      hit.contents?.text ||
                       (Array.isArray(hit.snippets) && hit.snippets.length > 0 ? hit.snippets.join(' ') : '') ||
                       hit.snippet ||
                       hit.description ||
