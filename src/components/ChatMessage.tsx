@@ -84,6 +84,7 @@ const HyperThinkingCard: React.FC<{
 export const ChatMessage: React.FC<ChatMessageProps> = ({
   message,
   isLastAssistant,
+  isStreaming,
   onOpenArtifact,
   onOpenAllFiles,
   onContinueGeneration,
