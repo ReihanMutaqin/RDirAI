@@ -409,20 +409,20 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
             {/* High Visibility Animated Processing Card with Embedded Phase Execution Tracker */}
             {isLoading && (
-              <div className="py-5 px-4 md:px-6 bg-white/90 border-y border-blue-100 shadow-sm">
+              <div className="py-5 px-4 md:px-6 bg-white/90 border-y border-gray-200 shadow-sm">
                 <div className="max-w-4xl mx-auto space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm border border-blue-100">
-                        <Loader2 className="w-5 h-5 animate-spin" />
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-sm border ${isImageModeActive ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
+                        {isImageModeActive ? <ImageIcon className="w-5 h-5 animate-pulse" /> : <Loader2 className="w-5 h-5 animate-spin" />}
                       </div>
                       <div>
-                        <div className="text-xs font-bold text-blue-700 flex items-center gap-2 font-mono">
-                          <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping"></span>
-                          PROSES ENGINE SEDANG BERJALAN ({elapsedSeconds} detik)
+                        <div className={`text-xs font-bold flex items-center gap-2 font-mono ${isImageModeActive ? 'text-purple-700' : 'text-blue-700'}`}>
+                          <span className={`w-2 h-2 rounded-full animate-ping ${isImageModeActive ? 'bg-purple-500' : 'bg-blue-500'}`}></span>
+                          {isImageModeActive ? `MEMBUAT MAHAKARYA SENI (${elapsedSeconds} detik)` : `PROSES ENGINE SEDANG BERJALAN (${elapsedSeconds} detik)`}
                         </div>
                         <div className="text-[11px] text-gray-500 mt-0.5">
-                          Menyusun arsitektur file workspace & menulis kode secara real-time...
+                          {isImageModeActive ? 'AI sedang meracik prompt visual & merender gambar High-Resolution...' : 'Menyusun arsitektur file workspace & menulis kode secara real-time...'}
                         </div>
                       </div>
                     </div>
@@ -432,12 +432,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                       className="px-3 py-1.5 rounded-xl bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 text-xs font-medium flex items-center gap-1.5 transition-colors shadow-sm shrink-0"
                     >
                       <Square className="w-3.5 h-3.5 text-gray-500" />
-                      Stop generating
+                      Stop
                     </button>
                   </div>
 
                   {/* Always Pinned Phase Execution Timeline inside the Processing Card */}
-                  {activePhases && activePhases.length > 0 && (
+                  {!isImageModeActive && activePhases && activePhases.length > 0 && (
                     <PhaseTracker phases={activePhases} />
                   )}
                 </div>
