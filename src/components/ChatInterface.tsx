@@ -491,6 +491,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100">
                   SVG
                 </span>
+              </div>
               <div className="flex items-center gap-3">
                 <select 
                   value={selectedModel}
