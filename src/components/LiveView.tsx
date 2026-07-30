@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { CodeArtifact } from '@/types/chat';
-import { Eye, Code2, Copy, Check, Maximize2, Minimize2, RefreshCw, X, Download, Sparkles, Terminal, FileCode } from 'lucide-react';
+import { Eye, Code2, Copy, Check, Maximize2, Minimize2, RefreshCw, X, Download, Sparkles, Terminal, FileCode, ExternalLink } from 'lucide-react';
 
 interface LiveViewProps {
   artifact: CodeArtifact | null;
@@ -267,6 +267,15 @@ export const LiveView: React.FC<LiveViewProps> = ({ artifact, allFiles = [], onC
 
   const previewHtml = generatePreviewHtml(artifact.code, artifact.language);
 
+  const handleOpenInNewTab = () => {
+    const htmlContent = generatePreviewHtml(artifact.code, artifact.language);
+    const newWindow = window.open('', '_blank');
+    if (newWindow) {
+      newWindow.document.write(htmlContent);
+      newWindow.document.close();
+    }
+  };
+
   return (
     <div
       className={`bg-gray-50 border-l border-gray-200 p-2 lg:p-4 flex flex-col transition-all duration-300 z-20 ${
@@ -313,6 +322,14 @@ export const LiveView: React.FC<LiveViewProps> = ({ artifact, allFiles = [], onC
             title="Unduh File"
           >
             <Download className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={handleOpenInNewTab}
+            className="p-2 text-gray-400 hover:text-white rounded-lg transition-colors"
+            title="Buka di Tab Baru"
+          >
+            <ExternalLink className="w-4 h-4" />
           </button>
 
           {/* Publish Button */}

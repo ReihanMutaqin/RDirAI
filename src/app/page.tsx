@@ -71,7 +71,7 @@ export default function Home() {
 
   const fetchConversations = async () => {
     try {
-      const res = await fetch('/api/conversations');
+      const res = await fetch(`/api/conversations?_t=${Date.now()}`);
       const data = await res.json();
       if (data.conversations) {
         setConversations(data.conversations);
@@ -83,7 +83,7 @@ export default function Home() {
 
   const fetchMessages = async (convId: string) => {
     try {
-      const res = await fetch(`/api/conversations?id=${convId}`);
+      const res = await fetch(`/api/conversations?id=${convId}&_t=${Date.now()}`);
       const data = await res.json();
       if (data.messages) {
         setMessages(data.messages);
