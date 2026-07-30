@@ -190,7 +190,14 @@ export default function Home() {
     return null;
   };
 
-  const createPhasesForPrompt = (): GenerationPhase[] => {
+  const createPhasesForPrompt = (promptText: string, model: string): GenerationPhase[] => {
+    // Hide phases if user is using You.com / Search models
+    if (model.toLowerCase().includes('you')) return [];
+    
+    // Only show phases if the user is asking to build/code something
+    const isBuildIntent = /(buat|bikin|web|html|css|js|php|aplikasi|sistem|kode|code|login|dashboard|tambah|edit|ui|ux|desain|tampilan|bikinkan|buatkan)/i.test(promptText);
+    if (!isBuildIntent) return [];
+
     return [
       { id: 1, title: 'Phase 1: Analisis Instruksi & Arsitektur Kode', status: 'in_progress', description: 'Menganalisis permintaan & menyiapkan struktur' },
       { id: 2, title: 'Phase 2: Generasi & Styling Komponen Web', status: 'pending', description: 'Menulis struktur HTML, Tailwind & UI' },
@@ -232,7 +239,7 @@ export default function Home() {
     setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
 
-    const initialPhases = createPhasesForPrompt();
+    const initialPhases = createPhasesForPrompt(text, selectedModel);
 
     const assistantMsgId = `msg_a_${Date.now()}`;
     const initialAssistantMsg: Message = {
