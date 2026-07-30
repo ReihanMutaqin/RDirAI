@@ -504,16 +504,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
                     </option>
                   ))}
                 </select>
-
-                {!isLoading && messages.length > 0 && lastMessage && lastMessage.role === 'assistant' && (
-                  <button
-                    onClick={onContinueGeneration}
-                    className="text-cyan-600 hover:text-cyan-700 flex items-center gap-1 font-semibold hover:underline"
-                  >
-                    <PlayCircle className="w-3.5 h-3.5 text-cyan-600 fill-cyan-100" />
-                    <span>▶ Lanjutkan Kode</span>
-                  </button>
-                )}
               </div>
             </div>
 

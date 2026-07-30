@@ -116,9 +116,14 @@ export async function POST(request: Request) {
             const data = await response.json();
             const content = data.output?.content || data.answer || data.text || data.response || "Maaf, tidak ada jawaban khusus teks dari You.com.";
             
-            accumulatedContent = content;
-            controller.enqueue(encoder.encode(content));
-            
+            // FAKE STREAMING FOR UI/UX
+            const chunkSize = 4;
+            for (let i = 0; i < content.length; i += chunkSize) {
+              const chunk = content.slice(i, i + chunkSize);
+              accumulatedContent += chunk;
+              controller.enqueue(encoder.encode(chunk));
+              await new Promise(r => setTimeout(r, 10));
+            }
           } else {
             // OPENROUTER LOGIC
             if (!orApiKey) throw new Error("OPENROUTER_API_KEY is missing in .env");

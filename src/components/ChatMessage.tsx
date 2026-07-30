@@ -107,7 +107,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
   };
 
   const createdFiles = getCreatedFiles(message.content);
-  const isTruncated = !isUser && (checkIsTruncated(message.content) || (isLastAssistant && message.content.length > 500));
+  const isTruncated = !isUser && checkIsTruncated(message.content);
 
   return (
     <div
