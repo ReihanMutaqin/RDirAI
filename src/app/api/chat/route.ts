@@ -217,7 +217,7 @@ export async function POST(request: Request) {
             accumulatedContent += searchNotice;
             controller.enqueue(encoder.encode(searchNotice));
 
-            const res = await fetch(`https://api.you.com/v1/search?query=${encodeURIComponent(lastUserMessage.content)}`, {
+            const res = await fetch(`https://api.you.com/v1/search?query=${encodeURIComponent(lastUserMessage.content)}&livecrawl=all&livecrawl_formats=markdown&crawl_timeout=30`, {
               headers: { 'X-API-Key': ydcApiKey }
             });
             if (!res.ok) throw new Error(`You.com Search API error: ${await res.text()}`);
@@ -432,7 +432,7 @@ export async function POST(request: Request) {
             // Step 1: Fetch live real-time web knowledge from You.com
             let liveWebData = "";
             try {
-              const res = await fetch(`https://api.you.com/v1/search?query=${encodeURIComponent(lastUserMessage.content)}`, {
+              const res = await fetch(`https://api.you.com/v1/search?query=${encodeURIComponent(lastUserMessage.content)}&livecrawl=all&livecrawl_formats=markdown&crawl_timeout=30`, {
                 headers: { 'X-API-Key': ydcApiKey }
               });
               if (res.ok) {
