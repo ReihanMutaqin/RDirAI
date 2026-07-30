@@ -9,7 +9,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeHighlight from 'rehype-highlight';
 import rehypeKatex from 'rehype-katex';
-import { User, Terminal, Copy, Check, Play, FileText, Image as ImageIcon, FileCode, PlayCircle } from 'lucide-react';
+import { User, Terminal, Copy, Check, Play, FileText, Image as ImageIcon, FileCode, PlayCircle, Download } from 'lucide-react';
 
 import 'katex/dist/katex.min.css';
 
@@ -181,6 +181,37 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 h3: ({node, ...props}: any) => <h3 className="text-[15px] font-semibold text-gray-800 mt-6 mb-2" {...props} />,
                 h4: ({node, ...props}: any) => <h4 className="text-[14px] font-semibold text-gray-700 mt-5 mb-2" {...props} />,
                 p: ({node, ...props}: any) => <p className="text-gray-600 leading-relaxed mb-4" {...props} />,
+                img: ({node, ...props}: any) => {
+                  return (
+                    <div className="relative group inline-block my-4 max-w-full">
+                      <img className="rounded-xl shadow-md max-w-full border border-gray-100" {...props} />
+                      <button
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          try {
+                            const response = await fetch(props.src);
+                            const blob = await response.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `rdirai_image_${Date.now()}.png`;
+                            document.body.appendChild(a);
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                            document.body.removeChild(a);
+                          } catch (err) {
+                            window.open(props.src, '_blank');
+                          }
+                        }}
+                        className="absolute top-3 right-3 bg-black/50 hover:bg-black/80 text-white backdrop-blur-sm p-2 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center gap-1.5 text-xs font-medium"
+                        title="Download Gambar"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Download
+                      </button>
+                    </div>
+                  );
+                },
                 code({ node, inline, className, children, ...props }: any) {
                   const match = /language-(\w+)/.exec(className || '');
                   const codeText = String(children).replace(/\n$/, '');
