@@ -83,6 +83,166 @@ function extractHitsFromYouData(data: any): any[] {
   return Array.from(map.values());
 }
 
+async function safeFetchYouSearch(query: string, apiKey: string): Promise<any> {
+  // Attempt 1: Fast Search with LiveCrawl (3.5s timeout)
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3500);
+    const res = await fetch(`https://api.you.com/v1/search?query=${encodeURIComponent(query)}&country=ID&livecrawl=all&livecrawl_formats=markdown`, {
+      headers: { 'X-API-Key': apiKey },
+      signal: controller.signal
+    });
+    clearTimeout(timer);
+    if (res.ok) return await res.json();
+  } catch (e) {
+    console.warn('LiveCrawl search timed out, falling back to instant search...', e);
+  }
+
+  // Attempt 2: Instant Fast Search Fallback (2s timeout)
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 2000);
+    const res = await fetch(`https://api.you.com/v1/search?query=${encodeURIComponent(query)}&country=ID`, {
+      headers: { 'X-API-Key': apiKey },
+      signal: controller.signal
+    });
+    clearTimeout(timer);
+    if (res.ok) return await res.json();
+  } catch (e) {
+    console.error('Fast search fallback failed:', e);
+  }
+
+  return null;
+}
+
+async function fetchCompletionWithFallback(
+  messages: any[],
+  model: string,
+  orApiKey: string
+): Promise<Response> {
+  const modelsToTry = Array.from(new Set([
+    model,
+    'meta-llama/llama-3.3-70b-instruct:free',
+    'qwen/qwen-2.5-coder-32b-instruct:free'
+  ])).filter(Boolean);
+
+  for (const m of modelsToTry) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 3500);
+
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${orApiKey}`,
+          'HTTP-Referer': 'https://rdirai.vercel.app',
+          'X-Title': 'RdirAI Workspace',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: m,
+          messages: messages,
+          stream: true,
+        }),
+        signal: controller.signal
+      });
+      clearTimeout(timer);
+
+      if (res.ok) return res;
+    } catch (e) {
+      console.warn(`OpenRouter model ${m} timed out/rate-limited, trying next...`);
+    }
+  }
+
+  // Ultimate Fast Engine: Pollinations AI Free Unlimited Text Engine (No API Key, No Rate Limits)
+  console.warn('All OpenRouter attempts timed out or 429 rate-limited. Activating Pollinations Unlimited Engine!');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  const res = await fetch('https://text.pollinations.ai/openai/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'openai',
+      messages: messages,
+      stream: true,
+    }),
+    signal: controller.signal
+  });
+  clearTimeout(timer);
+  return res;
+}
+
+async function parseAndEnqueueStream(
+  res: Response,
+  controller: ReadableStreamDefaultController,
+  encoder: TextEncoder,
+  decoder: TextDecoder
+): Promise<string> {
+  let fullText = '';
+  if (!res.body) return fullText;
+
+  const reader = res.body.getReader();
+  let accumulatedRaw = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value, { stream: true });
+    accumulatedRaw += chunk;
+
+    const lines = accumulatedRaw.split('\n');
+    // Keep incomplete last line in accumulatedRaw
+    accumulatedRaw = lines.pop() || '';
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('data: ')) {
+        const dataStr = trimmed.replace('data: ', '');
+        if (dataStr === '[DONE]') continue;
+
+        try {
+          const json = JSON.parse(dataStr);
+          const content = json.choices?.[0]?.delta?.content || json.choices?.[0]?.message?.content || '';
+          if (content) {
+            fullText += content;
+            controller.enqueue(encoder.encode(content));
+          }
+        } catch (e) {}
+      }
+    }
+  }
+
+  // Handle final remaining buffer (especially non-SSE single-line JSON like Pollinations AI)
+  const finalRaw = accumulatedRaw.trim();
+  if (finalRaw) {
+    if (finalRaw.startsWith('data: ')) {
+      const dataStr = finalRaw.replace('data: ', '');
+      if (dataStr !== '[DONE]') {
+        try {
+          const json = JSON.parse(dataStr);
+          const content = json.choices?.[0]?.delta?.content || json.choices?.[0]?.message?.content || '';
+          if (content) {
+            fullText += content;
+            controller.enqueue(encoder.encode(content));
+          }
+        } catch (e) {}
+      }
+    } else if (finalRaw.startsWith('{') && finalRaw.endsWith('}')) {
+      try {
+        const json = JSON.parse(finalRaw);
+        const content = json.choices?.[0]?.message?.content || json.choices?.[0]?.delta?.content || json.text || '';
+        if (content && !fullText) {
+          fullText += content;
+          controller.enqueue(encoder.encode(content));
+        }
+      } catch (e) {}
+    }
+  }
+
+  return fullText;
+}
+
 async function streamFormattedDataWithLLM(
   rawSearchData: string,
   userPrompt: string,
@@ -92,28 +252,26 @@ async function streamFormattedDataWithLLM(
   encoder: TextEncoder,
   decoder: TextDecoder
 ): Promise<string> {
-  let fullText = '';
   const formatMessages = [
     {
       role: 'system',
       content: `Anda adalah RdirAI Executive Data Presenter - Engine Penyaji Data & Visualisasi Real-Time Kelas Atas.
 WAKTU & TANGGAL REAL-TIME SEKARANG: ${new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} (Tahun ${new Date().getFullYear()}).
 
-Tugas Utama Anda: Ambil data mentah hasil pencarian internet dan SAJIKAN INFORMASI DARI DATA PENCARIAN TERSEBUT SECARA AKURAT, LENGKAP, DAN TERSTRUKTUR.
+Tugas Utama Anda: Ambil data mentah hasil pencarian internet dan SAJIKAN RINGKASAN DATA KLASEMEN/JADWAL TERKINI YANG SINGKAT, PADAT, DAN ELEGANKAN.
 
 ATURAN PRESENTASI MUTLAK:
-1. MANDATORI BAHASA: WAJIB SELALU MENJAWAB DALAM BAHASA INDONESIA YANG RAMAH, CLEAR, DAN ELEGANKAN! DILARANG KERAS MENJAWAB DALAM BAHASA INGGRIS KECUALI PENGGUNA MINTA DENGAN JELAS!
-2. PENTING: DILARANG KERAS MEMBUAT GAMBAR JUNK/EMOJI/ICON SOSMED DALAM RESPON! DILARANG KERAS MENGULANG-ULANG INFORMASI ATAU SEKSI BERULANG!
-3. Percayai data hasil pencarian internet yang diberikan di bawah ini. Sajikan informasi terkini dari hasil pencarian tersebut secara terpadu!
-4. HAPUS 100% SEMUA SITASI ANGKA MENTAH seperti [[1, 2]], [[12, 23]], [1], [27], dll. DILARANG MENYISAKAN BRAKET ANGKA SITASI APAPUN!
-5. JIKA ADA DATA ANGKA / KURS / PERBANDINGAN HARGA / KRIPTO / SAHAM / PERSENTASE / STATISTIK: WAJIB SERTAKAN BLOK DIAGRAM ("chart") DISAMPING TABEL MARKDOWN!
+1. MANDATORI BAHASA: WAJIB SELALU MENJAWAB DALAM BAHASA INDONESIA YANG RAMAH, CLEAR, DAN ELEGANKAN! DILARANG KERAS MENJAWAB DALAM BAHASA INGGRIS!
+2. ATURAN ANTI-REPETISI & RINGKAS: DILARANG KERAS MEMBUAT SEKSI BERULANG ATAU MEMBUAT BEBERAPA TABEL KLASEMEN DENGAN DATA YANG SAMA! GABUNGKAN SELURUH DATA MENJADI SATU KARYA TABEL MAHKOTA RINGKAS UTUH!
+3. DILARANG MEMBUAT PARAGRAF PANJANG LEBAR JIKA PENGGUNA HANYA MEMINTA KLASEMEN ATAU JADWAL!
+4. HAPUS 100% SEMUA SITASI ANGKA MENTAH seperti [[1, 2]], [[12, 23]], [1], [27], dll.
+5. JIKA ADA DATA ANGKA / KURS / STATISTIK: WAJIB SERTAKAN BLOK DIAGRAM ("chart") DISAMPING TABEL MARKDOWN!
 6. WAJIB BUATKAN 1 TABEL MARKDOWN UTUH (| Header 1 | Header 2 |) yang simetris, rapi, dan berisi detail lengkap.
 7. Format struktur laporan:
-   - 📌 **Poin Penting Eksekutif** (Ringkasan fakta tebal 2-3 kalimat dari hasil pencarian)
-   - 📊 **Tabel Ringkasan Data & Nilai**
-   - 📈 **Diagram Visualisasi Interactive** (Blok \`\`\`chart)
-   - 💡 **Analisis & Catatan Informasi**
-8. Buat tampilan terasa sangat eksklusif, canggih, mahal, dan profesional!`
+   - 📌 **Poin Penting Eksekutif** (Ringkasan fakta tebal 2 kalimat dari hasil pencarian)
+   - 📊 **Tabel Ringkasan Klasemen / Jadwal Utama**
+   - 📈 **Diagram Visualisasi Interactive** (Blok \`\`\`chart jika ada data statistik/poin)
+   - 💡 **Catatan Ringkas**`
     },
     {
       role: 'user',
@@ -123,59 +281,18 @@ ATURAN PRESENTASI MUTLAK:
 
   const targetModel = selectedModel && !selectedModel.toLowerCase().includes('you')
     ? selectedModel
-    : (process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'inclusionai/ling-3.0-flash:free');
+    : (process.env.NEXT_PUBLIC_DEFAULT_MODEL || 'meta-llama/llama-3.3-70b-instruct:free');
 
+  let fullText = '';
   try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${orApiKey}`,
-        'HTTP-Referer': 'https://rdirai.vercel.app',
-        'X-Title': 'RdirAI Workspace',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: targetModel,
-        messages: formatMessages,
-        stream: true,
-      }),
-    });
-
-    if (res.ok && res.body) {
-      const reader = res.body.getReader();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
-
-        for (const line of lines) {
-          const trimmed = line.trim();
-          if (trimmed.startsWith('data: ')) {
-            const dataStr = trimmed.replace('data: ', '');
-            if (dataStr === '[DONE]') continue;
-
-            try {
-              const json = JSON.parse(dataStr);
-              const content = json.choices?.[0]?.delta?.content || '';
-              if (content) {
-                fullText += content;
-                controller.enqueue(encoder.encode(content));
-              }
-            } catch (e) {}
-          }
-        }
-      }
+    const res = await fetchCompletionWithFallback(formatMessages, targetModel, orApiKey);
+    if (res.ok) {
+      fullText = await parseAndEnqueueStream(res, controller, encoder, decoder);
     }
   } catch (err) {
-    console.error('LLM formatting failed, falling back to raw:', err);
+    console.error('LLM formatting failed:', err);
   }
 
-  if (!fullText) {
-    controller.enqueue(encoder.encode(rawSearchData));
-    return rawSearchData;
-  }
   return fullText;
 }
 
@@ -237,17 +354,17 @@ export async function POST(request: Request) {
             accumulatedContent += searchNotice;
             controller.enqueue(encoder.encode(searchNotice));
 
-            const res = await fetch(`https://api.you.com/v1/search?query=${encodeURIComponent(lastUserMessage.content)}&country=ID&livecrawl=all&livecrawl_formats=markdown&crawl_timeout=30`, {
-              headers: { 'X-API-Key': ydcApiKey }
-            });
-            if (!res.ok) throw new Error(`You.com Search API error: ${await res.text()}`);
-            const data = await res.json();
+            let searchKeyword = lastUserMessage.content;
+            if (/vct|mpl|esports|jadwal|liga|standings|schedule|bracket|presiden/i.test(searchKeyword)) {
+              searchKeyword += " Liquipedia match schedule standings";
+            }
+            const data = await safeFetchYouSearch(searchKeyword, ydcApiKey);
             
             let rawResultMarkdown = "";
             const hits = extractHitsFromYouData(data);
 
-            if (hits.length > 0) {
-              hits.slice(0, 8).forEach((hit: any) => {
+            if (hits && hits.length > 0) {
+              hits.slice(0, 5).forEach((hit: any, idx: number) => {
                 const snippetText = 
                   hit.contents?.markdown ||
                   hit.contents?.text ||
@@ -257,19 +374,14 @@ export async function POST(request: Request) {
                   hit.content ||
                   hit.text ||
                   '';
-                rawResultMarkdown += `#### 🌐 [${hit.title || 'Berita Terkini'}](${hit.url || '#'})\n${snippetText}\n\n`;
+                rawResultMarkdown += `[Data Sumber ${idx + 1}: ${hit.title || 'Sumber'} - ${hit.url || '#'}]\n${snippetText}\n\n`;
               });
             } else {
-              rawResultMarkdown = data.answer || "Tidak ada hasil instan spesifik dari pencarian.";
+              rawResultMarkdown = data?.answer || "Tidak ada hasil instan spesifik dari pencarian.";
             }
 
-            if (orApiKey) {
-              const formatted = await streamFormattedDataWithLLM(rawResultMarkdown, lastUserMessage.content, orApiKey, selectedModel, controller, encoder, decoder);
-              accumulatedContent += formatted;
-            } else {
-              accumulatedContent += rawResultMarkdown;
-              controller.enqueue(encoder.encode(rawResultMarkdown));
-            }
+            const formatted = await streamFormattedDataWithLLM(rawResultMarkdown, lastUserMessage.content, orApiKey || '', selectedModel, controller, encoder, decoder);
+            accumulatedContent += formatted;
           }
           // 2. SKILL: DEEP RESEARCH (/v1/research exhaustive)
           else if (searchMode === 'deep_research') {
