@@ -449,8 +449,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             </div>
           )}
 
-          {/* Continue Generation Quick Button */}
-          {isTruncated && onContinueGeneration && (
+          {/* Continue Generation Quick Button (Only show when streaming is finished/stopped AND code is truncated) */}
+          {!isStreaming && isTruncated && onContinueGeneration && (
             <div className="pt-3">
               <button
                 onClick={onContinueGeneration}
