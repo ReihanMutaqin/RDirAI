@@ -54,6 +54,89 @@ Sertakan nama file di atas blok kode persis seperti contoh berikut:
 Berikan jawaban yang sangat jelas, ramah, dan profesional.
 `;
 
+async function streamFormattedDataWithLLM(
+  rawSearchData: string,
+  userPrompt: string,
+  orApiKey: string,
+  selectedModel: string,
+  controller: ReadableStreamDefaultController,
+  encoder: TextEncoder,
+  decoder: TextDecoder
+): Promise<string> {
+  let fullText = '';
+  const formatMessages = [
+    {
+      role: 'system',
+      content: `Anda adalah RdirAI Executive Data Presenter.
+Tugas Anda: Ambil data hasil pencarian mentah berikut dan FORMAT ULANG menjadi laporan visual yang SANGAT CANTIK, RAPI, SANGAT ESTETIK, DAN PROFESIONAL.
+
+ATURAN PRESENTASI WAJIB:
+1. Hapus SEMUA sitasi angka mentah seperti [[12, 23]], [1], [27], dll.
+2. JIKA ADA DATA ANGKA / HARGA / KEUANGAN / KRIPTO / SAHAM / PERBANDINGAN: WAJIB buatkan TABEL MARKDOWN yang rapi, simetris, dan mudah dibaca!
+3. Gunakan Poin-Poin Tebal (**Headline**), Sub-Judul (###), dan Highlight Warna Teks jika relevan.
+4. Buatkan ringkasan "📌 Poin Penting Eksekutif" di bagian paling atas.
+5. Bahasa: Gunakan Bahasa Indonesia yang ramah, profesional, dan futuristik. Jangan tampilkan teks mentah atau bracket sitasi!`
+    },
+    {
+      role: 'user',
+      content: `Pertanyaan Pengguna: ${userPrompt}\n\nData Mentah Hasil Pencarian:\n${rawSearchData}`
+    }
+  ];
+
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${orApiKey}`,
+        'HTTP-Referer': 'https://rdirai.vercel.app',
+        'X-Title': 'RdirAI Workspace',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: selectedModel,
+        messages: formatMessages,
+        stream: true,
+      }),
+    });
+
+    if (res.ok && res.body) {
+      const reader = res.body.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('data: ')) {
+            const dataStr = trimmed.replace('data: ', '');
+            if (dataStr === '[DONE]') continue;
+
+            try {
+              const json = JSON.parse(dataStr);
+              const content = json.choices?.[0]?.delta?.content || '';
+              if (content) {
+                fullText += content;
+                controller.enqueue(encoder.encode(content));
+              }
+            } catch (e) {}
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('LLM formatting failed, falling back to raw:', err);
+  }
+
+  if (!fullText) {
+    controller.enqueue(encoder.encode(rawSearchData));
+    return rawSearchData;
+  }
+  return fullText;
+}
+
 export async function POST(request: Request) {
   try {
     await initDb();
@@ -157,14 +240,14 @@ export async function POST(request: Request) {
 
             if (!res.ok) throw new Error(`You.com Research API error: ${await res.text()}`);
             const data = await res.json();
-            const content = data.output?.content || data.answer || data.text || "Tidak ada hasil analisis riset.";
+            const rawContent = data.output?.content || data.answer || data.text || "Tidak ada hasil analisis riset.";
             
-            const chunkSize = 6;
-            for (let i = 0; i < content.length; i += chunkSize) {
-              const chunk = content.slice(i, i + chunkSize);
-              accumulatedContent += chunk;
-              controller.enqueue(encoder.encode(chunk));
-              await new Promise(r => setTimeout(r, 8));
+            if (orApiKey) {
+              const formatted = await streamFormattedDataWithLLM(rawContent, lastUserMessage.content, orApiKey, selectedModel, controller, encoder, decoder);
+              accumulatedContent += formatted;
+            } else {
+              accumulatedContent += rawContent;
+              controller.enqueue(encoder.encode(rawContent));
             }
           }
           // 3. SKILL: FINANCE RESEARCH (Pasar Keuangan, Kripto, Saham)
@@ -189,14 +272,14 @@ export async function POST(request: Request) {
 
             if (!res.ok) throw new Error(`You.com Finance API error: ${await res.text()}`);
             const data = await res.json();
-            const content = data.output?.content || data.answer || data.text || "Tidak ada data finansial.";
+            const rawContent = data.output?.content || data.answer || data.text || "Tidak ada data finansial.";
             
-            const chunkSize = 6;
-            for (let i = 0; i < content.length; i += chunkSize) {
-              const chunk = content.slice(i, i + chunkSize);
-              accumulatedContent += chunk;
-              controller.enqueue(encoder.encode(chunk));
-              await new Promise(r => setTimeout(r, 8));
+            if (orApiKey) {
+              const formatted = await streamFormattedDataWithLLM(rawContent, lastUserMessage.content, orApiKey, selectedModel, controller, encoder, decoder);
+              accumulatedContent += formatted;
+            } else {
+              accumulatedContent += rawContent;
+              controller.enqueue(encoder.encode(rawContent));
             }
           }
           // 4. SKILL: BACA CONTENTS LINK URL (/v1/contents + Fallback Scraper)
@@ -304,14 +387,15 @@ export async function POST(request: Request) {
               }
             }
 
-            const resultMarkdown = extractedText || "### 📄 Ekstraksi Konten Halaman Web:\n\nMaaf, tidak dapat mengambil isi teks dari link tersebut. Halaman mungkin terlindungi oleh Captcha atau membutuhkan autentikasi.";
-
-            const chunkSize = 8;
-            for (let i = 0; i < resultMarkdown.length; i += chunkSize) {
-              const chunk = resultMarkdown.slice(i, i + chunkSize);
-              accumulatedContent += chunk;
-              controller.enqueue(encoder.encode(chunk));
-              await new Promise(r => setTimeout(r, 6));
+            const rawResultText = extractedText || "Maaf, tidak dapat mengambil isi teks dari link tersebut.";
+            
+            // Pass through LLM Executive Presenter for beautiful formatting
+            if (orApiKey) {
+              const formatted = await streamFormattedDataWithLLM(rawResultText, lastUserMessage.content, orApiKey, selectedModel, controller, encoder, decoder);
+              accumulatedContent += formatted;
+            } else {
+              accumulatedContent += rawResultText;
+              controller.enqueue(encoder.encode(rawResultText));
             }
           } else {
             // OPENROUTER LOGIC
